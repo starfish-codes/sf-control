@@ -74,9 +74,9 @@ Hi [FULL NAME]
 
 we have stored this information for you.
 
-UUID                Username            Email             Status
-----------------------------------------------------------------------------
-[UUID]              [USERNAME]          [EMAIL]           [STATUS]
+Username            Email
+---------------------------
+[USERNAME]          [EMAIL]
 ```
 
 ### Assignments
