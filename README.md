@@ -107,6 +107,7 @@ The key consideration for the approach to support this with a command line inter
 We will provide a couple of integrations but also open up for plugins later on to extend to what's out there.
 
 As of today we support:
+
 - Toggl
 - Harvest
 - Clockify
@@ -231,7 +232,7 @@ Workspace ID                  (required): [WORKSPACE_ID]
 Project IDs (required / comma separated): [LIST OF PROJECT IDS]
 Task IDs    (optional / comma separated): [LIST OF TASK IDS]
 Billable?                     (required): [BILLED|UNBILLED|BOTH]
-Rounding?                     (required): [ON|OFF]       
+Rounding?                     (required): [ON|OFF]
 ```
 
 ### Synchronize Data
