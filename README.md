@@ -1,10 +1,10 @@
-# fsctl [![Build status](https://badge.buildkite.com/22ecc67f358163f4714383ff0fde8e847d1e3ae488fc10312f.svg)](https://buildkite.com/starfish/sf-control)
+# sfctl [![Build status](https://badge.buildkite.com/22ecc67f358163f4714383ff0fde8e847d1e3ae488fc10312f.svg)](https://buildkite.com/starfish/sf-control)
 
 ```
-fsctl is a command line interface for the Starfish API.
+sfctl is a command line interface for the Starfish API.
 
 Usage:
-  fsctl [command]
+  sfctl [command]
 
 Available Commands:
   account     account commands
@@ -18,7 +18,7 @@ Flags:
   -t, --touchy      no data will be overwritten in starfish.team
 ```
 
-## Installing `fsctl`
+## Installing `sfctl`
 
 ### Using a Package Manager (Preferred)
 
