@@ -5,4 +5,4 @@ echo "---  Prepare :bundler: dependencies"
 bundle install
 
 echo "+++ Run :rspec:"
-rspec
+bundle exec rspec
