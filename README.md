@@ -13,6 +13,7 @@ Available Commands:
   version     show the current version
 
 Flags:
+  -a, --all         don't filter data
   -d, --dry-run     just execute the command - no writes to starfish.team
   -h, --help        help for fsctl
   -t, --touchy      no data will be overwritten in starfish.team
@@ -195,6 +196,7 @@ This will list all known connections in that project. The data is read from the 
 ```
 Connection: [ASSIGNMENT NAME]
   provider: toggl
+  workspace_id: 54321
   project_ids: 123, 324,23, 333
   task_ids:
   billable: both
@@ -225,6 +227,7 @@ After selecting the assignment the command will prompt you to enter the provider
 See an example for toggl below:
 
 ```
+Workspace ID                  (required): [WORKSPACE_ID]
 Project IDs (required / comma separated): [LIST OF PROJECT IDS]
 Task IDs    (optional / comma separated): [LIST OF TASK IDS]
 Billable?                     (required): [BILLED|UNBILLED|BOTH]
