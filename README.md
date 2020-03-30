@@ -1,10 +1,10 @@
-# fsctl [![Build status](https://badge.buildkite.com/22ecc67f358163f4714383ff0fde8e847d1e3ae488fc10312f.svg)](https://buildkite.com/starfish/sf-control)
+# sfctl [![Build status](https://badge.buildkite.com/22ecc67f358163f4714383ff0fde8e847d1e3ae488fc10312f.svg)](https://buildkite.com/starfish/sf-control)
 
 ```
-fsctl is a command line interface for the Starfish API.
+sfctl is a command line interface for the Starfish API.
 
 Usage:
-  fsctl [command]
+  sfctl [command]
 
 Available Commands:
   account     account commands
@@ -13,12 +13,13 @@ Available Commands:
   version     show the current version
 
 Flags:
+  -a, --all         don't filter data
   -d, --dry-run     just execute the command - no writes to starfish.team
   -h, --help        help for fsctl
   -t, --touchy      no data will be overwritten in starfish.team
 ```
 
-## Installing `fsctl`
+## Installing `sfctl`
 
 ### Using a Package Manager (Preferred)
 
@@ -73,9 +74,9 @@ Hi [FULL NAME]
 
 we have stored this information for you.
 
-UUID                Username            Email             Status
-----------------------------------------------------------------------------
-[UUID]              [USERNAME]          [EMAIL]           [STATUS]
+Username            Email
+---------------------------
+[USERNAME]          [EMAIL]
 ```
 
 ### Assignments
@@ -195,6 +196,7 @@ This will list all known connections in that project. The data is read from the 
 ```
 Connection: [ASSIGNMENT NAME]
   provider: toggl
+  workspace_id: 54321
   project_ids: 123, 324,23, 333
   task_ids:
   billable: both
@@ -225,6 +227,7 @@ After selecting the assignment the command will prompt you to enter the provider
 See an example for toggl below:
 
 ```
+Workspace ID                  (required): [WORKSPACE_ID]
 Project IDs (required / comma separated): [LIST OF PROJECT IDS]
 Task IDs    (optional / comma separated): [LIST OF TASK IDS]
 Billable?                     (required): [BILLED|UNBILLED|BOTH]
