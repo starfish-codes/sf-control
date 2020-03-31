@@ -1,10 +1,14 @@
-RSpec.describe "`sfctl auth` command", type: :cli do
-  it "executes `sfctl help auth` command successfully" do
-    output = `sfctl help auth`
-    expected_output = <<-OUT
+RSpec.describe "'sfctl auth' command", type: :cli do
+  it "executes 'sfctl auth' command successfully" do
+    expected_output = <<-HEREDOC
 Commands:
-    OUT
+  sfctl auth bye             # Log out by either removing the config file.
+  sfctl auth help [COMMAND]  # Describe subcommands or one specific subcommand
+  sfctl auth init [TOKEN]    # Authenticate with Starfish.team
 
-    expect(output).to eq(expected_output)
+HEREDOC
+
+    output = `sfctl auth --no-color`
+    expect(output).to eq expected_output
   end
 end

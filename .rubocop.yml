@@ -49,3 +49,16 @@ Style/HashTransformKeys:
 
 Style/HashTransformValues:
   Enabled: true
+
+Layout/HeredocIndentation:
+  Enabled: false
+
+Layout/TrailingWhitespace:
+  Exclude:
+    - "spec/sfctl_spec.rb"
+    - "spec/integration/**/*"
+
+Layout/ClosingHeredocIndentation:
+  Exclude:
+    - "spec/sfctl_spec.rb"
+    - "spec/integration/**/*"

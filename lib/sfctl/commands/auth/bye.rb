@@ -1,18 +1,16 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
-require "tty-prompt"
-require "tty-file"
+require 'tty-prompt'
+require 'tty-file'
 
 module Sfctl
   module Commands
     class Auth
       class Bye < Sfctl::Command
-        def initialize(options)
-          @options = options
-        end
+        def initialize(*); end
 
-        def execute(input: $stdin, output: $stdout)
+        def execute(*)
           prompt = TTY::Prompt.new
           reset_config! if prompt.yes?('Are you sure?')
         end

@@ -1,16 +1,12 @@
-# frozen_string_literal: true
-
 require 'thor'
 
 module Sfctl
   module Commands
     class Auth < Thor
-
       namespace :auth
 
       desc 'bye', 'Log out by either removing the config file.'
-      method_option :help, aliases: '-h', type: :boolean,
-                           desc: '...'
+      method_option :help, aliases: '-h', type: :boolean, desc: '...'
       def bye(*)
         if options[:help]
           invoke :help, ['bye']
@@ -37,19 +33,3 @@ module Sfctl
     end
   end
 end
-
-
-
-
-# sfctl auth init
-# You wil be promted to enter your access token that you've generated on the profile page.
-#
-# Starfish.team access token: YOUR_TOKEN
-# After entering your token, you will receive confirmation that the credentials were accepted. In case your token is not accepted, please make sure you copy and paste it correctly.
-#
-# Your token is valid 👍
-# As a consequece a .sfctl directory will be created in your $HOME and all data is stored for further use. You can safely copy this folder to other machines to replicate the access. Just be aware this is giving the user controlling the directory access to your starfish account.
-#
-# You can log out by either removing the config directory or by executing the following command:
-#
-# sfctl auth bye

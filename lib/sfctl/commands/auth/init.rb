@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require 'pastel'
 require 'tty-spinner'
 
 module Sfctl
@@ -17,15 +18,7 @@ module Sfctl
         def execute(output: $stdout)
           spinner = TTY::Spinner.new('[:spinner] Checking token ...')
           spinner.auto_spin
-          if token_valid?
-            config.set :access_token, value: @access_token
-            save_config!
-            spinner.success
-            output.puts token_accepted_message
-          else
-            spinner.error
-            output.puts wrong_token_message
-          end
+          token_valid? ? update_config!(spinner, output) : render_error(spinner, output)
         end
 
         private
@@ -41,6 +34,18 @@ module Sfctl
 
         def wrong_token_message
           @pastel.red('Token is not accepted, please make sure you copy and paste it correctly.')
+        end
+
+        def update_config!(spinner, output)
+          config.set :access_token, value: @access_token
+          save_config!
+          spinner.success
+          output.puts token_accepted_message
+        end
+
+        def render_error(spinner, output)
+          spinner.error
+          output.puts wrong_token_message
         end
       end
     end

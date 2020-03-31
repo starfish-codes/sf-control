@@ -1,16 +1,17 @@
-RSpec.describe "`sfctl auth init` command", type: :cli do
-  it "executes `sfctl auth help init` command successfully" do
-    output = `sfctl auth help init`
-    expected_output = <<-OUT
+RSpec.describe "'sfctl auth init' command", type: :cli do
+  it "executes 'sfctl auth init -h' command successfully" do
+    expected_output = <<-HEREDOC
 Usage:
-  sfctl init
+  sfctl auth init [TOKEN]
 
 Options:
-  -h, [--help], [--no-help]  # Display usage information
+  -h, [--help], [--no-help]  
 
-Command description...
-    OUT
+Description:
+  Before you can use sfctl, you need to authenticate with Starfish.team by providing an access token, which can be created on the profile page of your account.
+HEREDOC
 
+    output = `sfctl auth init -h`
     expect(output).to eq(expected_output)
   end
 end
