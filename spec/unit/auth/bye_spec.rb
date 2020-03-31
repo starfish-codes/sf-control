@@ -1,8 +1,9 @@
 require 'sfctl/commands/auth/bye'
 
 RSpec.describe Sfctl::Commands::Auth::Bye do
+  subject(:command) { described_class.new }
+
   let(:config_file) { '.sfctl' }
-  let(:command) { described_class.new }
 
   before do
     config_path = fixtures_path(config_file)

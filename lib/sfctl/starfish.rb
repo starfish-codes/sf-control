@@ -3,14 +3,12 @@ require 'json'
 
 module Sfctl
   module Starfish
-    API_URL = 'https://preview.starfish.team/api/v1/'.freeze
-
     def self.conn(token)
       headers = {
         'Content-Type' => 'application/json',
         'Authorization' => "Bearer #{token}"
       }
-      Faraday.new(url: API_URL, headers: headers) do |builder|
+      Faraday.new(url: Sfctl.configuration.starfish_api_url, headers: headers) do |builder|
         builder.request :retry
         builder.adapter :net_http
       end
