@@ -1,3 +1,9 @@
 steps:
-  - label: "Example"
-    command: ./scripts/test.sh
+  - label: "Rubocop"
+    commands:
+      - bundle
+      - bundle exec rubocop
+  - label: "RSpec"
+    commands:
+      - bundle
+      - bundle exec rspec

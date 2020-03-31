@@ -1,0 +1,64 @@
+inherit_mode:
+  merge:
+    - Include
+
+AllCops:
+  Include:
+    - "**/*.gemspec"
+    - "**/*.rake"
+    - "**/Gemfile"
+    - "**/Rakefile"
+  Exclude:
+    - "bin/**/*"
+    - "exe/**/*"
+    - "sfctl.gemspec"
+  CacheRootDirectory: tmp/cache/rubocop_cache/
+  TargetRubyVersion: 2.7.0
+
+Style/Documentation:
+  Enabled: false
+
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+  IndentationWidth: 2
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/BlockLength:
+  Enabled: false
+
+Style/FrozenStringLiteralComment:
+  Enabled: false
+
+Layout/EndOfLine:
+  EnforcedStyle: lf
+
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+
+Lint/AmbiguousBlockAssociation:
+  Exclude:
+    - "spec/**/*"
+
+Style/HashEachMethods:
+  Enabled: true
+
+Style/HashTransformKeys:
+  Enabled: true
+
+Style/HashTransformValues:
+  Enabled: true
+
+Layout/HeredocIndentation:
+  Enabled: false
+
+Layout/TrailingWhitespace:
+  Exclude:
+    - "spec/sfctl_spec.rb"
+    - "spec/integration/**/*"
+
+Layout/ClosingHeredocIndentation:
+  Exclude:
+    - "spec/sfctl_spec.rb"
+    - "spec/integration/**/*"
