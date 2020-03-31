@@ -3,6 +3,7 @@ source 'https://rubygems.org'
 # Specify your gem's dependencies in sfctl.gemspec
 gemspec
 
+gem 'faraday'
 gem 'pastel'
 gem 'rake', '~> 12.0'
 gem 'thor'

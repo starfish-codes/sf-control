@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require_relative '../../command'
+require_relative '../../starfish'
 require 'pastel'
 require 'tty-spinner'
 
@@ -24,8 +25,7 @@ module Sfctl
         private
 
         def token_valid?
-          sleep(rand * 5) # TODO: replace with real call to API
-          @access_token == 'correctToken'
+          Starfish.check_authorization(@access_token)
         end
 
         def token_accepted_message

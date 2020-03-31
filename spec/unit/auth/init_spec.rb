@@ -8,13 +8,14 @@ RSpec.describe Sfctl::Commands::Auth::Init do
       'no-color' => true
     }
   end
+  let(:check_auth_url) { 'https://preview.starfish.team/api/v1/profile' }
 
   before do
     stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
   end
 
   it 'should do nothing if token is not correct' do
-    expect_any_instance_of(described_class).to receive(:token_valid?).and_return(false)
+    stub_request(:get, check_auth_url).to_return(body: { 'error': 'forbidden' }.to_s, status: 403)
 
     command = described_class.new('wrongToken', options)
 
@@ -26,7 +27,8 @@ RSpec.describe Sfctl::Commands::Auth::Init do
   end
 
   it 'should create a config file' do
-    expect_any_instance_of(described_class).to receive(:token_valid?).and_return(true)
+    response_body = { 'email' => 'test-user@mail.com', 'name' => 'Test User' }.to_s
+    stub_request(:get, check_auth_url).to_return(body: response_body, status: 200)
 
     command = described_class.new('correctToken', options)
 
