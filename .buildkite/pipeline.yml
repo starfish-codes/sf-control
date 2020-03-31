@@ -1,5 +1,9 @@
 steps:
   - label: "Rubocop"
-    command: bundle exec rubocop
+    commands:
+      - bundle
+      - bundle exec rubocop
   - label: "RSpec"
-    command: bundle exec rspec
+    commands:
+      - bundle
+      - bundle exec rspec
