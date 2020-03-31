@@ -12,6 +12,6 @@ Description:
 HEREDOC
 
     output = `sfctl auth init -h`
-    expect(output).to eq(expected_output)
+    expect(output.delete("\n").squeeze).to eq expected_output.delete("\n").squeeze
   end
 end
