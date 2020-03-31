@@ -25,7 +25,7 @@ module Sfctl
         private
 
         def token_valid?
-          Starfish.check_authorization(@access_token)
+          Starfish.check_authorization(@options['starfish-host'], @access_token)
         end
 
         def token_accepted_message

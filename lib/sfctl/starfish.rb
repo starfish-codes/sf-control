@@ -3,19 +3,21 @@ require 'json'
 
 module Sfctl
   module Starfish
-    def self.conn(token)
+    def self.conn(endpoint, token)
       headers = {
         'Content-Type' => 'application/json',
         'Authorization' => "Bearer #{token}"
       }
-      Faraday.new(url: Sfctl.configuration.starfish_api_url, headers: headers) do |builder|
+      Faraday.new(url: "#{endpoint}/api/v1", headers: headers) do |builder|
         builder.request :retry
         builder.adapter :net_http
       end
     end
 
-    def self.check_authorization(token)
-      response = conn(token).get('profile')
+    def self.check_authorization(endpoint, token)
+      return false if endpoint.nil? || token.nil?
+
+      response = conn(endpoint, token).get('profile')
       response.status == 200
     end
   end

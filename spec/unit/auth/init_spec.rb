@@ -5,10 +5,11 @@ RSpec.describe Sfctl::Commands::Auth::Init do
   let(:output) { StringIO.new }
   let(:options) do
     {
-      'no-color' => true
+      'no-color' => true,
+      'starfish-host' => 'https://starfish.team'
     }
   end
-  let(:check_auth_url) { 'https://preview.starfish.team/api/v1/profile' }
+  let(:check_auth_url) { "#{options['starfish-host']}/api/v1/profile" }
 
   before do
     stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))

@@ -17,7 +17,9 @@ RSpec.describe Sfctl do
         sfctl version            # sfctl version
 
       Options:
-        [--no-color]  # Disable colorization in output
+        [--no-color]            # Disable colorization in output
+        [--starfish-host=HOST]  # The starfish API endpoint
+                                # Default: https://starfish.team
 
     HEREDOC
 

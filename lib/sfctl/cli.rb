@@ -20,8 +20,10 @@ module Sfctl
       super
     end
 
-    class_option :"no-color", type: :boolean, default: false,
-                              desc: 'Disable colorization in output'
+    class_option :"no-color", type: :boolean, default: false, desc: 'Disable colorization in output'
+    class_option :"starfish-host", type: :string, default: 'https://starfish.team',
+                                   desc: 'The starfish API endpoint',
+                                   banner: 'HOST'
 
     desc 'version', 'sfctl version'
     def version
