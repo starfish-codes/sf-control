@@ -4,22 +4,22 @@ RSpec.describe Sfctl do
   end
 
   it "executes 'sfctl' command successfully" do
-    expected_output = <<-HEREDOC
-         __          _     _ 
-  ___   / _|   ___  | |_  | |
- / __| | |_   / __| | __| | |
- \\__ \\ |  _| | (__  | |_  | |
- |___/ |_|    \\___|  \\__| |_|
-                             
-Commands:
-  sfctl auth [SUBCOMMAND]  # Authentication with Starfish.team
-  sfctl help [COMMAND]     # Describe available commands or one specific command
-  sfctl version            # sfctl version
+    expected_output = <<~HEREDOC
+               __          _     _ 
+        ___   / _|   ___  | |_  | |
+       / __| | |_   / __| | __| | |
+       \\__ \\ |  _| | (__  | |_  | |
+       |___/ |_|    \\___|  \\__| |_|
+                                   
+      Commands:
+        sfctl auth [SUBCOMMAND]  # Authentication with Starfish.team
+        sfctl help [COMMAND]     # Describe available commands or one specific command
+        sfctl version            # sfctl version
 
-Options:
-  [--no-color]  # Disable colorization in output
+      Options:
+        [--no-color]  # Disable colorization in output
 
-HEREDOC
+    HEREDOC
 
     output = `sfctl --no-color`
     expect(output).to eq expected_output
