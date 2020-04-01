@@ -32,6 +32,9 @@ module Sfctl
     end
     map %w[--version -v] => :version
 
+    require_relative 'commands/account'
+    register Sfctl::Commands::Account, 'account', 'account [SUBCOMMAND]', 'Account information for Starfish.team'
+
     require_relative 'commands/auth'
     register Sfctl::Commands::Auth, 'auth', 'auth [SUBCOMMAND]', 'Authentication with Starfish.team'
   end

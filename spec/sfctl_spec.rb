@@ -1,4 +1,4 @@
-RSpec.describe Sfctl do
+RSpec.describe Sfctl, type: :cli do
   it 'has a version number' do
     expect(Sfctl::VERSION).not_to be nil
   end
@@ -12,9 +12,10 @@ RSpec.describe Sfctl do
        |___/ |_|    \\___|  \\__| |_|
                                    
       Commands:
-        sfctl auth [SUBCOMMAND]  # Authentication with Starfish.team
-        sfctl help [COMMAND]     # Describe available commands or one specific command
-        sfctl version            # sfctl version
+        sfctl account [SUBCOMMAND]  # Account information for Starfish.team
+        sfctl auth [SUBCOMMAND]     # Authentication with Starfish.team
+        sfctl help [COMMAND]        # Describe available commands or one specific c...
+        sfctl version               # sfctl version
 
       Options:
         [--no-color]            # Disable colorization in output

@@ -18,7 +18,7 @@ module Sfctl
         private
 
         def reset_config!
-          TTY::File.remove_file CONFIG_PATH
+          ::TTY::File.remove_file CONFIG_PATH
         end
       end
     end

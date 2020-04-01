@@ -18,9 +18,10 @@ Dir[File.join('.', 'spec', 'support', '**', '*.rb')].sort.each { |f| require f }
 WebMock.disable_net_connect!
 
 RSpec.configure do |config|
+  config.order = 'random'
   config.include(TestHelpers::Paths)
   config.include(TestHelpers::Silent)
-  config.after(:example, type: :cli) do
+  config.after(:example, type: :unit) do
     FileUtils.rm_rf(tmp_path)
   end
   config.disable_monkey_patching!
