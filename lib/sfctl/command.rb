@@ -12,6 +12,11 @@ module Sfctl
     LINK_CONFIG_FILENAME = '.sflink'
     LINK_CONFIG_PATH = "#{Dir.home}/#{LINK_CONFIG_FILENAME}"
 
+    TOGGL_PROVIDER = 'toggl'
+    PROVIDERS_LIST = [
+      TOGGL_PROVIDER
+    ].freeze
+
     def_delegators :command, :run
 
     # Main configuration

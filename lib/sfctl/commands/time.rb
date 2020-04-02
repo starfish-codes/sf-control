@@ -21,6 +21,9 @@ module Sfctl
           Sfctl::Commands::Time::Init.new(options).execute
         end
       end
+
+      require_relative 'time/providers'
+      register Sfctl::Commands::Time::Providers, 'providers', 'providers [SUBCOMMAND]', 'Manage providers.'
     end
   end
 end
