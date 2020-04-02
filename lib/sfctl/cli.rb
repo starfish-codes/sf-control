@@ -32,6 +32,9 @@ module Sfctl
     end
     map %w[--version -v] => :version
 
+    require_relative 'commands/time'
+    register Sfctl::Commands::Time, 'time', 'time [SUBCOMMAND]', 'Time reports'
+
     require_relative 'commands/account'
     register Sfctl::Commands::Account, 'account', 'account [SUBCOMMAND]', 'Account information for Starfish.team'
 

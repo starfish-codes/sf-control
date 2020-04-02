@@ -9,6 +9,8 @@ module Sfctl
 
     CONFIG_FILENAME = '.sfctl'
     CONFIG_PATH = "#{Dir.home}/#{CONFIG_FILENAME}"
+    LINK_CONFIG_FILENAME = '.sflink'
+    LINK_CONFIG_PATH = "#{Dir.home}/#{LINK_CONFIG_FILENAME}"
 
     def_delegators :command, :run
 
@@ -41,6 +43,14 @@ module Sfctl
       false
     end
 
+    def read_link_config
+      config.read(LINK_CONFIG_PATH, format: :yaml)
+    end
+
+    def save_link_config!
+      config.write(LINK_CONFIG_PATH, format: :yaml, force: true)
+    end
+
     # Execute this command
     #
     # @api public
@@ -66,79 +76,79 @@ module Sfctl
     # @see http://www.rubydoc.info/gems/tty-cursor
     #
     # @api public
-    def cursor
-      require 'tty-cursor'
-      TTY::Cursor
-    end
+    # def cursor
+    #   require 'tty-cursor'
+    #   TTY::Cursor
+    # end
 
     # Open a file or text in the user's preferred editor
     #
     # @see http://www.rubydoc.info/gems/tty-editor
     #
     # @api public
-    def editor
-      require 'tty-editor'
-      TTY::Editor
-    end
+    # def editor
+    #   require 'tty-editor'
+    #   TTY::Editor
+    # end
 
     # Terminal output paging
     #
     # @see http://www.rubydoc.info/gems/tty-pager
     #
     # @api public
-    def pager(**options)
-      require 'tty-pager'
-      TTY::Pager.new(options)
-    end
+    # def pager(**options)
+    #   require 'tty-pager'
+    #   TTY::Pager.new(options)
+    # end
 
     # Terminal platform and OS properties
     #
     # @see http://www.rubydoc.info/gems/tty-pager
     #
     # @api public
-    def platform
-      require 'tty-platform'
-      TTY::Platform.new
-    end
+    # def platform
+    #   require 'tty-platform'
+    #   TTY::Platform.new
+    # end
 
     # The interactive prompt
     #
     # @see http://www.rubydoc.info/gems/tty-prompt
     #
     # @api public
-    def prompt(**options)
-      require 'tty-prompt'
-      TTY::Prompt.new(options)
-    end
+    # def prompt(**options)
+    #   require 'tty-prompt'
+    #   TTY::Prompt.new(options)
+    # end
 
     # Get terminal screen properties
     #
     # @see http://www.rubydoc.info/gems/tty-screen
     #
     # @api public
-    def screen
-      require 'tty-screen'
-      TTY::Screen
-    end
+    # def screen
+    #   require 'tty-screen'
+    #   TTY::Screen
+    # end
 
     # The unix which utility
     #
     # @see http://www.rubydoc.info/gems/tty-which
     #
     # @api public
-    def which(*args)
-      require 'tty-which'
-      TTY::Which.which(*args)
-    end
+    # def which(*args)
+    #   require 'tty-which'
+    #   TTY::Which.which(*args)
+    # end
 
     # Check if executable exists
     #
     # @see http://www.rubydoc.info/gems/tty-which
     #
     # @api public
-    def exec_exist?(*args)
-      require 'tty-which'
-      TTY::Which.exist?(*args)
-    end
+    # def exec_exist?(*args)
+    #   require 'tty-which'
+    #   TTY::Which.exist?(*args)
+    # end
   end
 end

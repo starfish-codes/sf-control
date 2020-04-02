@@ -41,8 +41,8 @@ module Sfctl
         def print_assignments(assignments, output)
           assignments.each do |assignment|
             header = ["Assignment: #{assignment['name']}"]
-            table = TTY::Table.new header: header, rows: rows(assignment)
-            output.puts table.render(:unicode, padding: [0, 1], multiline: true)
+            table = ::TTY::Table.new header: header, rows: rows(assignment)
+            output.print table.render(:unicode, padding: [0, 1], multiline: true)
             output.puts
           end
         end

@@ -17,7 +17,7 @@ module Sfctl
         end
 
         def execute(output: $stdout)
-          spinner = TTY::Spinner.new('[:spinner] Checking token ...')
+          spinner = ::TTY::Spinner.new('[:spinner] Checking token ...')
           spinner.auto_spin
           token_valid? ? update_config!(spinner, output) : render_error(spinner, output)
         end
