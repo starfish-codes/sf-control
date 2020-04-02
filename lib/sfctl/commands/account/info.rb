@@ -30,8 +30,8 @@ module Sfctl
         def print_table(info, output)
           header = info.keys
           rows = [info.values]
-          table = TTY::Table.new header: header, rows: rows
-          output.puts table.render(:unicode, padding: [0, 1])
+          table = ::TTY::Table.new header: header, rows: rows
+          output.print table.render(:unicode, padding: [0, 1])
           output.puts
         end
       end

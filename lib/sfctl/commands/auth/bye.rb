@@ -11,7 +11,7 @@ module Sfctl
         def initialize(*); end
 
         def execute(*)
-          prompt = TTY::Prompt.new
+          prompt = ::TTY::Prompt.new
           reset_config! if prompt.yes?('Are you sure?')
         end
 

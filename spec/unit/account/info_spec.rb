@@ -1,8 +1,9 @@
 require 'sfctl/commands/account/info'
+require 'tty-file'
 
 RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
   let(:config_file) { '.sfctl' }
-  let(:output) { StringIO.new }
+  let(:output_io) { StringIO.new }
   let(:options) do
     {
       'no-color' => true,
@@ -19,9 +20,9 @@ RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
     expect(::File.file?(tmp_path(config_file))).to be_falsey
 
     command = described_class.new(options)
-    command.execute(output: output)
+    command.execute(output: output_io)
 
-    expect(output.string).to include('Please authentificate before continue.')
+    expect(output_io.string).to include('Please authentificate before continue.')
   end
 
   it 'should do nothing if profile could not be fetched' do
@@ -32,9 +33,9 @@ RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
     stub_request(:get, account_profile_url).to_return(body: '{"error":"forbidden"}', status: 403)
 
     command = described_class.new(options)
-    command.execute(output: output)
+    command.execute(output: output_io)
 
-    expect(output.string).to include('Something went wrong. Unable to fetch account info')
+    expect(output_io.string).to include('Something went wrong. Unable to fetch account info')
   end
 
   it 'should print a profile' do
@@ -48,11 +49,16 @@ RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
     name = 'Test User'
     response_body = "{\"email\":\"#{email}\",\"name\":\"#{name}\"}"
     stub_request(:get, account_profile_url).to_return(body: response_body, status: 200)
+    expected_output = <<~HEREDOC
+      ┌────────────────────┬───────────┐
+      │ email              │ name      │
+      ├────────────────────┼───────────┤
+      │ #{email} │ #{name} │
+      └────────────────────┴───────────┘
+    HEREDOC
 
-    command = described_class.new(options)
-    command.execute(output: output)
+    described_class.new(options).execute(output: output_io)
 
-    expect(output.string).to include(email)
-    expect(output.string).to include(name)
+    expect(output_io.string).to eq expected_output
   end
 end

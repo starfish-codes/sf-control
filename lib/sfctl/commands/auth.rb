@@ -17,7 +17,7 @@ module Sfctl
       end
 
       desc 'init [TOKEN]', 'Authenticate with Starfish.team'
-      long_desc <<-DESC
+      long_desc <<~DESC
         Before you can use sfctl, you need to authenticate with Starfish.team by providing an access token,
         which can be created on the profile page of your account.
       DESC

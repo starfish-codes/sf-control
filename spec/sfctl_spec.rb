@@ -15,6 +15,7 @@ RSpec.describe Sfctl, type: :cli do
         sfctl account [SUBCOMMAND]  # Account information for Starfish.team
         sfctl auth [SUBCOMMAND]     # Authentication with Starfish.team
         sfctl help [COMMAND]        # Describe available commands or one specific c...
+        sfctl time [SUBCOMMAND]     # Time reports
         sfctl version               # sfctl version
 
       Options:

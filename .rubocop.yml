@@ -13,7 +13,7 @@ AllCops:
     - "exe/**/*"
     - "sfctl.gemspec"
   CacheRootDirectory: tmp/cache/rubocop_cache/
-  TargetRubyVersion: 2.7.0
+  TargetRubyVersion: 2.7.1
 
 Style/Documentation:
   Enabled: false
@@ -62,3 +62,9 @@ Layout/ClosingHeredocIndentation:
   Exclude:
     - "spec/sfctl_spec.rb"
     - "spec/integration/**/*"
+
+Lint/RaiseException:
+  Enabled: true
+
+Lint/StructNewOverride:
+  Enabled: true

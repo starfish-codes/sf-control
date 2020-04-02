@@ -1,8 +1,9 @@
 require 'sfctl/commands/account/assignments'
+require 'tty-file'
 
 RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
   let(:config_file) { '.sfctl' }
-  let(:output) { StringIO.new }
+  let(:output_io) { StringIO.new }
   let(:options) do
     {
       'no-color' => true,
@@ -44,9 +45,9 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
     expect(::File.file?(tmp_path(config_file))).to be_falsey
 
     command = described_class.new(options)
-    command.execute(output: output)
+    command.execute(output: output_io)
 
-    expect(output.string).to include('Please authentificate before continue.')
+    expect(output_io.string).to include('Please authentificate before continue.')
   end
 
   it 'should do nothing if assignments could not be fetched' do
@@ -57,25 +58,29 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
     stub_request(:get, assignments_url).to_return(body: '{"error":"forbidden"}', status: 403)
 
     command = described_class.new(options)
-    command.execute(output: output)
+    command.execute(output: output_io)
 
-    expect(output.string).to include('Something went wrong. Unable to fetch assignments')
+    expect(output_io.string).to include('Something went wrong. Unable to fetch assignments')
   end
 
   context 'success response' do
+    let(:expected_output) do
+      <<~HEREDOC
+        ┌─────────────────────────────┐
+        │ Assignment: #{name} │
+        ├─────────────────────────────┤
+        │ Service: #{service}        │
+        │ Start:   #{start_date}         │
+        │ End:     #{end_date}         │
+        │ Budget:  #{budget} #{unit}            │
+        └─────────────────────────────┘
+      HEREDOC
+    end
+
     before :each do
       config_path = fixtures_path(config_file)
       ::FileUtils.cp(config_path, tmp_path(config_file))
       expect(::File.file?(tmp_path(config_file))).to be_truthy
-    end
-
-    after :each do
-      expect(output.string).to include(name)
-      expect(output.string).to include(service)
-      expect(output.string).to include(budget.to_s)
-      expect(output.string).to include(unit)
-      expect(output.string).to include(start_date)
-      expect(output.string).to include(end_date)
     end
 
     it 'should print an active assignments' do
@@ -84,7 +89,10 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
       stub_request(:get, assignments_url).to_return(body: response_body, status: 200)
 
       command = described_class.new(options)
-      command.execute(output: output)
+
+      command.execute(output: output_io)
+
+      expect(output_io.string).to eq expected_output
     end
 
     it 'should print all assignments' do
@@ -95,7 +103,10 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
       stub_request(:get, "#{assignments_url}?all=1").to_return(body: response_body, status: 200)
 
       command = described_class.new(options)
-      command.execute(output: output)
+
+      command.execute(output: output_io)
+
+      expect(output_io.string).to eq expected_output
     end
   end
 end
