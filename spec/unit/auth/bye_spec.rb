@@ -1,13 +1,13 @@
 require 'sfctl/commands/auth/bye'
 
-RSpec.describe Sfctl::Commands::Auth::Bye do
+RSpec.describe Sfctl::Commands::Auth::Bye, type: :unit do
   subject(:command) { described_class.new }
 
   let(:config_file) { '.sfctl' }
 
   before do
     config_path = fixtures_path(config_file)
-    ::FileUtils.cp(config_path, tmp_path)
+    ::FileUtils.cp(config_path, tmp_path(config_file))
     expect(File.file?(tmp_path(config_file))).to be_truthy
     stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
   end
@@ -26,6 +26,5 @@ RSpec.describe Sfctl::Commands::Auth::Bye do
     command.execute
 
     expect(File.file?(tmp_path(config_file))).to be_truthy
-    ::FileUtils.rm(tmp_path(config_file))
   end
 end

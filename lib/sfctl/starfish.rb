@@ -1,12 +1,15 @@
 require 'faraday'
 require 'json'
+require 'pastel'
 
 module Sfctl
   module Starfish
     def self.conn(endpoint, token)
+      raise 'Before continue please pass endpoint and token.' if endpoint.nil? || token.nil?
+
       headers = {
         'Content-Type' => 'application/json',
-        'Authorization' => "Bearer #{token}"
+        'X-Starfish-Auth' => token
       }
       Faraday.new(url: "#{endpoint}/api/v1", headers: headers) do |builder|
         builder.request :retry
@@ -14,11 +17,24 @@ module Sfctl
       end
     end
 
-    def self.check_authorization(endpoint, token)
-      return false if endpoint.nil? || token.nil?
+    def self.parsed_response(response)
+      [response.status == 200, JSON.parse(response.body)]
+    end
 
+    def self.check_authorization(endpoint, token)
       response = conn(endpoint, token).get('profile')
       response.status == 200
+    end
+
+    def self.account_info(endpoint, token)
+      response = conn(endpoint, token).get('profile')
+      parsed_response(response)
+    end
+
+    def self.account_assignments(endpoint, all, token)
+      api_conn = conn(endpoint, token)
+      response = all ? api_conn.get('assignments?all=1') : api_conn.get('assignments')
+      parsed_response(response)
     end
   end
 end

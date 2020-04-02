@@ -1,6 +1,6 @@
 require 'sfctl/commands/auth/init'
 
-RSpec.describe Sfctl::Commands::Auth::Init do
+RSpec.describe Sfctl::Commands::Auth::Init, type: :unit do
   let(:config_file) { '.sfctl' }
   let(:output) { StringIO.new }
   let(:options) do
@@ -37,6 +37,5 @@ RSpec.describe Sfctl::Commands::Auth::Init do
 
     expect(output.string).to include 'Credentials are accepted.'
     expect(File.file?(tmp_path(config_file))).to be_truthy
-    ::FileUtils.rm(tmp_path(config_file))
   end
 end

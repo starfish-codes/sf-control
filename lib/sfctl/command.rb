@@ -18,8 +18,6 @@ module Sfctl
       @config ||= begin
         config = TTY::Config.new
         config.append_path Dir.home
-        # config.filename = ''
-        # config.extname = '.sfctl'
         config
       end
     end
@@ -30,6 +28,17 @@ module Sfctl
 
     def read_config
       config.read(CONFIG_PATH, format: :yaml)
+    end
+
+    def access_token
+      read_config['access_token']
+    end
+
+    def config_present?(output)
+      read_config
+    rescue TTY::Config::ReadError
+      output.puts Pastel.new(enabled: !@options['no-color']).red('Please authentificate before continue.')
+      false
     end
 
     # Execute this command
@@ -70,16 +79,6 @@ module Sfctl
     def editor
       require 'tty-editor'
       TTY::Editor
-    end
-
-    # File manipulation utility methods
-    #
-    # @see http://www.rubydoc.info/gems/tty-file
-    #
-    # @api public
-    def generator
-      require 'tty-file'
-      TTY::File
     end
 
     # Terminal output paging
