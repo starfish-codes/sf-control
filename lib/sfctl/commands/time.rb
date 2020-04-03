@@ -24,6 +24,9 @@ module Sfctl
 
       require_relative 'time/providers'
       register Sfctl::Commands::Time::Providers, 'providers', 'providers [SUBCOMMAND]', 'Manage providers.'
+
+      require_relative 'time/connections'
+      register Sfctl::Commands::Time::Connections, 'connections', 'connections [SUBCOMMAND]', 'Manage connections.'
     end
   end
 end
