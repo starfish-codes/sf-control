@@ -2,4 +2,3 @@
 providers:
   toggl:
     access_token: 'test_access_token'
-    workspace: 'test_workspace'

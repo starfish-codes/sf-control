@@ -33,7 +33,6 @@ RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
 
   it 'should set a new toggl provider' do
     access_token = 'test_access_token'
-    workspace = 'test_workspace'
 
     ::FileUtils.touch tmp_path(link_config_file)
 
@@ -45,10 +44,6 @@ RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
       .with('Your access token at [toggl]:', required: true)
       .and_return(access_token)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:ask)
-      .with('Your workspace at [toggl]:', required: true)
-      .and_return(workspace)
-
     expect_any_instance_of(TTY::Prompt).to receive(:yes?).with('Is that information correct?').and_return(true)
 
     described_class.new(options).execute(output: output)
@@ -59,6 +54,5 @@ RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
     file_data = File.read(tmp_path(link_config_file))
     expect(file_data).to include toggl_provider
     expect(file_data).to include access_token
-    expect(file_data).to include workspace
   end
 end

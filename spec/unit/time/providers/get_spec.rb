@@ -21,7 +21,6 @@ RSpec.describe Sfctl::Commands::Time::Providers::Get, type: :unit do
 
   it 'should get providers' do
     access_token = 'test_access_token'
-    workspace = 'test_workspace'
 
     link_config_path = fixtures_path(link_config_file)
     ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
@@ -30,7 +29,6 @@ RSpec.describe Sfctl::Commands::Time::Providers::Get, type: :unit do
 
     expect(output.string).to include toggl_provider
     expect(output.string).to include access_token
-    expect(output.string).to include workspace
   end
 
   it 'should return a message that provider is not set' do

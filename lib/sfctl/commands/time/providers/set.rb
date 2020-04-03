@@ -35,9 +35,8 @@ module Sfctl
             prompt.yes?('Do you want to replace it?')
           end
 
-          def save_toggl_config!(output, access_token, workspace)
+          def save_toggl_config!(output, access_token)
             config.set("providers.#{TOGGL_PROVIDER}.access_token", value: access_token)
-            config.set("providers.#{TOGGL_PROVIDER}.workspace", value: workspace)
             save_link_config!
             output.puts @pastel.green('Everything saved.')
           end
@@ -45,10 +44,9 @@ module Sfctl
           def setup_toggl_provider!(output, prompt)
             output.puts
             access_token = prompt.ask("Your access token at [#{@pastel.green(TOGGL_PROVIDER)}]:", required: true)
-            workspace = prompt.ask("Your workspace at [#{@pastel.green(TOGGL_PROVIDER)}]:", required: true)
             is_correct = prompt.yes?('Is that information correct?')
             if is_correct
-              save_toggl_config!(output, access_token, workspace)
+              save_toggl_config!(output, access_token)
             else
               setup_toggl_provider!(output, prompt)
             end

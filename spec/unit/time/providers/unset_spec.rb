@@ -42,11 +42,9 @@ RSpec.describe Sfctl::Commands::Time::Providers::Unset, type: :unit do
     expect(output.string).to include "Configuration for provider [#{toggl_provider}] was successfully deleted."
 
     access_token = 'test_access_token'
-    workspace = 'test_workspace'
     file_data = File.read(tmp_path(link_config_file))
     expect(file_data).to include 'providers:'
     expect(file_data).not_to include toggl_provider
     expect(file_data).not_to include access_token
-    expect(file_data).not_to include workspace
   end
 end
