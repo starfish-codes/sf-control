@@ -2,3 +2,11 @@
 providers:
   toggl:
     access_token: 'test_access_token'
+connections:
+  Test assignment:
+    provider: toggl
+    workspace_id: '11111'
+    project_ids: '2222, 3333'
+    task_ids: '4444, 5555, 6666, 7777'
+    billable: 'yes'
+    rounding: 'off'

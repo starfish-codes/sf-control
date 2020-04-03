@@ -56,6 +56,13 @@ module Sfctl
       config.write(LINK_CONFIG_PATH, format: :yaml, force: true)
     end
 
+    def link_config_present?(output)
+      read_link_config
+    rescue TTY::Config::ReadError
+      output.puts Pastel.new(enabled: !@options['no-color']).red('Please initialize time before continue.')
+      false
+    end
+
     # Execute this command
     #
     # @api public
