@@ -1,5 +1,4 @@
 require 'sfctl/commands/time/connections/get'
-require 'tempfile'
 
 RSpec.describe Sfctl::Commands::Time::Connections::Get, type: :unit do
   let(:link_config_file) { '.sflink' }

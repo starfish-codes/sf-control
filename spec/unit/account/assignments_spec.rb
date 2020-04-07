@@ -1,5 +1,4 @@
 require 'sfctl/commands/account/assignments'
-require 'tty-file'
 
 RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
   let(:config_file) { '.sfctl' }
@@ -64,7 +63,7 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
   end
 
   context 'success response' do
-    let(:expected_output) do
+    let(:expected_table) do
       <<~HEREDOC
         ┌─────────────────────────────┐
         │ Assignment: #{name} │
@@ -84,29 +83,29 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
     end
 
     it 'should print an active assignments' do
-      skip 'Fails on CI. Need to fix.'
-
       stub_request(:get, assignments_url).to_return(body: response_body, status: 200)
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return(expected_table)
 
       command = described_class.new(options)
 
       command.execute(output: output_io)
 
-      expect(output_io.string).to eq expected_output
+      expect(output_io.string).to eq "#{expected_table}\n"
     end
 
     it 'should print all assignments' do
-      skip 'Fails on CI. Need to fix.'
-
       options['all'] = true
 
       stub_request(:get, "#{assignments_url}?all=1").to_return(body: response_body, status: 200)
 
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return(expected_table)
+
       command = described_class.new(options)
 
       command.execute(output: output_io)
 
-      expect(output_io.string).to eq expected_output
+      expect(output_io.string).to eq "#{expected_table}\n"
     end
   end
 end

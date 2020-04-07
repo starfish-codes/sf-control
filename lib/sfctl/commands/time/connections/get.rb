@@ -36,7 +36,7 @@ module Sfctl
             end
           end
 
-          def print_toggl_connection!(output, assignment_name) # rubocop:disable Metrics/AbcSize
+          def print_toggl_connection!(output, assignment_name)
             output.puts "Connection: #{assignment_name}"
             output.puts "  provider: #{TOGGL_PROVIDER}"
             output.puts "  workspace_id: #{config.fetch(:connections, assignment_name, :workspace_id)}"

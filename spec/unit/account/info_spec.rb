@@ -39,8 +39,6 @@ RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
   end
 
   it 'should print a profile' do
-    skip 'Fails on CI. Need to fix.'
-
     config_path = fixtures_path(config_file)
     ::FileUtils.cp(config_path, tmp_path(config_file))
     expect(::File.file?(tmp_path(config_file))).to be_truthy
@@ -49,16 +47,17 @@ RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
     name = 'Test User'
     response_body = "{\"email\":\"#{email}\",\"name\":\"#{name}\"}"
     stub_request(:get, account_profile_url).to_return(body: response_body, status: 200)
-    expected_output = <<~HEREDOC
+    expected_table = <<~HEREDOC
       ┌────────────────────┬───────────┐
       │ email              │ name      │
       ├────────────────────┼───────────┤
       │ #{email} │ #{name} │
       └────────────────────┴───────────┘
     HEREDOC
+    expect_any_instance_of(TTY::Table).to receive(:render).and_return(expected_table)
 
     described_class.new(options).execute(output: output_io)
 
-    expect(output_io.string).to eq expected_output
+    expect(output_io.string).to eq "#{expected_table}\n"
   end
 end

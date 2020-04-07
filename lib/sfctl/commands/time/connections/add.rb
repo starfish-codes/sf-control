@@ -63,7 +63,7 @@ module Sfctl
             list
           end
 
-          def setup_toggl_connection!(assignment_name) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+          def setup_toggl_connection!(assignment_name)
             workspace_id = @prompt.ask('Workspace ID (required):', required: true)
             project_ids = @prompt.ask('Project IDs  (required / comma separated):', required: true)
             task_ids = @prompt.ask('Task IDs     (optional / comma separated):') || ''
