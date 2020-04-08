@@ -4,8 +4,8 @@ Gem::Specification.new do |spec|
   spec.name = 'sfctl'
   spec.license = 'MIT'
   spec.version = Sfctl::VERSION
-  spec.authors = ['Serhii Rudik']
-  spec.email = ['serhii.rudik@leanshore.com']
+  spec.authors = ['Serhii Rudik', 'Markus Kuhnt']
+  spec.email = ['serhii@starfish.team']
 
   spec.summary = 'sfctl is a command line interface for the Starfish API.'
   # spec.homepage      = ''
