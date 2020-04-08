@@ -12,13 +12,11 @@ module Sfctl
           end
 
           def execute(output: $stdout)
-            read_link_config
+            return unless config_present?(output)
 
             PROVIDERS_LIST.each do |provider|
               read(provider, output)
             end
-          rescue TTY::Config::ReadError
-            output.puts @pastel.yellow('Please initialize time before continue.')
           end
 
           private

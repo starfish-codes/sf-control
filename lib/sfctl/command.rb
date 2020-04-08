@@ -10,7 +10,7 @@ module Sfctl
     CONFIG_FILENAME = '.sfctl'
     CONFIG_PATH = "#{Dir.home}/#{CONFIG_FILENAME}"
     LINK_CONFIG_FILENAME = '.sflink'
-    LINK_CONFIG_PATH = "#{Dir.home}/#{LINK_CONFIG_FILENAME}"
+    LINK_CONFIG_PATH = "#{Dir.pwd}/#{LINK_CONFIG_FILENAME}"
 
     TOGGL_PROVIDER = 'toggl'
     PROVIDERS_LIST = [

@@ -2,6 +2,7 @@ require 'pastel'
 require 'tty-prompt'
 require_relative '../../../command'
 require_relative '../../../starfish'
+require 'pry'
 
 module Sfctl
   module Commands
@@ -33,11 +34,11 @@ module Sfctl
 
             provider = @prompt.select('Select provider:', PROVIDERS_LIST)
 
-            assignment_name = select_assignment(assignments)
+            assignment_obj = select_assignment(assignments)
 
             case provider
             when TOGGL_PROVIDER
-              setup_toggl_connection!(assignment_name)
+              setup_toggl_connection!(assignment_obj)
             end
 
             save_link_config!
@@ -50,7 +51,8 @@ module Sfctl
           def select_assignment(assignments)
             @prompt.select('Select assignment:') do |menu|
               assignments.each.with_index do |asmnt, i|
-                menu.choice name: "#{i + 1}. #{asmnt['name']} / #{asmnt['service']}", value: asmnt['name']
+                menu.choice name: "#{i + 1}. #{asmnt['name']} / #{asmnt['service']}",
+                            value: { 'id' => asmnt['id'], 'name' => asmnt['name'] }
               end
             end
           end
@@ -58,24 +60,26 @@ module Sfctl
           def filter_assignments(list)
             return list if config.fetch(:connections).nil?
 
-            added_assignments_name = config.fetch(:connections).keys
-            list.delete_if { |h| added_assignments_name.include?(h['name']) }
+            added_assignments_ids = config.fetch(:connections).keys
+            list.delete_if { |h| added_assignments_ids.include?(h['id'].to_s) }
             list
           end
 
-          def setup_toggl_connection!(assignment_name)
+          def setup_toggl_connection!(assignment_obj) # rubocop:disable Metrics/AbcSize
+            assignment_id = assignment_obj['id']
             workspace_id = @prompt.ask('Workspace ID (required):', required: true)
             project_ids = @prompt.ask('Project IDs  (required / comma separated):', required: true)
             task_ids = @prompt.ask('Task IDs     (optional / comma separated):') || ''
             billable = @prompt.select('Billable?    (required)', %w[yes no both])
             rounding = @prompt.select('Rounding?    (required)', %w[on off])
 
-            config.set("connections.#{assignment_name}.provider", value: TOGGL_PROVIDER)
-            config.set("connections.#{assignment_name}.workspace_id", value: workspace_id)
-            config.set("connections.#{assignment_name}.project_ids", value: project_ids)
-            config.set("connections.#{assignment_name}.task_ids", value: task_ids)
-            config.set("connections.#{assignment_name}.billable", value: billable)
-            config.set("connections.#{assignment_name}.rounding", value: rounding)
+            config.set("connections.#{assignment_id}.name", value: assignment_obj['name'])
+            config.set("connections.#{assignment_id}.provider", value: TOGGL_PROVIDER)
+            config.set("connections.#{assignment_id}.workspace_id", value: workspace_id)
+            config.set("connections.#{assignment_id}.project_ids", value: project_ids)
+            config.set("connections.#{assignment_id}.task_ids", value: task_ids)
+            config.set("connections.#{assignment_id}.billable", value: billable)
+            config.set("connections.#{assignment_id}.rounding", value: rounding)
           end
         end
       end

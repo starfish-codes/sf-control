@@ -10,13 +10,13 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       'no-color' => true
     }
   end
-  let(:assignment_id) { 1 }
+  let(:assignment_id) { 1010 }
   let(:assignments_url) { "#{options['starfish-host']}/api/v1/assignments" }
   let(:next_report_url) { "#{options['starfish-host']}/api/v1/assignments/#{assignment_id}/next_report" }
   let(:toggl_token) { 'test_toggl_token' }
   let(:toggl_url) do
     <<~HEREDOC
-      https://www.toggl.com/api/v8/time_entries?end_date=2020-12-31T23:59:59%2B00:00&pid=2222,%203333&start_date=2020-12-01T00:00:00%2B00:00&wid=11111
+      https://www.toggl.com/api/v8/time_entries?end_date=2020-12-31T23:59:59%2B00:00&start_date=2020-12-01T00:00:00%2B00:00&wid=11111
     HEREDOC
   end
   let(:assignment_name) { 'Test assignment' }
@@ -105,11 +105,13 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   it 'should return an error that connection not created' do
     copy_config_file
     copy_link_config_file
+    assignment_id = 1000
     assignment_name = 'Not connected assignment'
     assignments_body = <<~HEREDOC
       {
         "assignments": [
           {
+            "id": #{assignment_id},
             "name": "#{assignment_name}",
             "service": "Test service"
           }
@@ -120,29 +122,11 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
-      .and_return(assignment_name)
+      .and_return(assignment_id)
 
     described_class.new(options).execute(output: output)
 
     expect(output.string).to include "Unable to find a connection for assignment \"#{assignment_name}\""
-  end
-
-  it 'should return an error that next report is not exists' do
-    copy_config_file
-    copy_link_config_file
-
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
-    stub_request(:get, next_report_url).to_return(body: '{}', status: 404)
-
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
-      .and_return('all')
-
-    described_class.new(options).execute(output: output)
-
-    message = <<~HEREDOC
-      No next reporting segment on Starfish that accepts time report data, the synchronization will be skipped.
-    HEREDOC
-    expect(output.string).to include message
   end
 
   it 'should return an error that next report is not exists' do
