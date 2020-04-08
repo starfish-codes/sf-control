@@ -3,6 +3,7 @@ require 'pastel'
 require 'tty-prompt'
 require 'tty-spinner'
 require 'tty-table'
+require 'pry'
 require_relative '../../command'
 require_relative '../../starfish'
 require_relative '../../toggl'
@@ -34,17 +35,17 @@ module Sfctl
         private
 
         def assignments_to_sync(assignments)
-          assignment_name = select_assignment(assignments)
+          assignment_id = select_assignment(assignments)
 
-          return assignments if assignment_name == 'all'
+          return assignments if assignment_id == 'all'
 
-          assignments.select { |a| a['name'] == assignment_name }.to_a
+          assignments.select { |a| a['id'].to_s == assignment_id.to_s }.to_a
         end
 
         def select_assignment(assignments)
           @prompt.select('Which assignment do you want to sync?') do |menu|
             assignments.each do |asmnt|
-              menu.choice name: "#{asmnt['name']} / #{asmnt['service']}", value: asmnt['name']
+              menu.choice name: "#{asmnt['name']} / #{asmnt['service']}", value: asmnt['id'].to_s
             end
             menu.choice name: 'All', value: 'all'
           end
@@ -52,15 +53,15 @@ module Sfctl
 
         def sync_assignments(output, list)
           list.each do |assignment|
-            assignment_name = assignment['name']
-            connection = read_link_config['connections'].select { |c| c == assignment_name }
+            assignment_id = assignment['id'].to_s
+            connection = read_link_config['connections'].select { |c| c == assignment_id }
 
             if connection.empty?
-              output.puts @pastel.red("Unable to find a connection for assignment \"#{assignment_name}\"")
+              output.puts @pastel.red("Unable to find a connection for assignment \"#{assignment['name']}\"")
               next
             end
 
-            sync(output, assignment, connection[assignment_name])
+            sync(output, assignment, connection[assignment_id])
           end
         end
 
@@ -148,12 +149,15 @@ module Sfctl
           rows
         end
 
-        def get_toggle_time_entries(next_report, connection)
+        def get_toggle_time_entries(next_report, connection) # rubocop:disable Metrics/AbcSize
           _success, time_entries = Toggl.time_entries(
             read_link_config['providers'][TOGGL_PROVIDER]['access_token'], time_entries_params(next_report, connection)
           )
           unless connection['task_ids'].empty?
             time_entries.delete_if { |te| !connection['task_ids'].include?(te['id'].to_s) }
+          end
+          unless connection['project_ids'].empty?
+            time_entries.delete_if { |te| !connection['project_ids'].include?(te['pid'].to_s) }
           end
 
           time_entries
@@ -164,7 +168,6 @@ module Sfctl
           end_date = start_date.next_month.prev_day
           {
             wid: connection['workspace_id'],
-            pid: connection['project_ids'],
             start_date: start_date.to_datetime.to_s,
             end_date: "#{end_date}T23:59:59+00:00"
           }

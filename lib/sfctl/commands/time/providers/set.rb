@@ -13,7 +13,7 @@ module Sfctl
           end
 
           def execute(output: $stdout)
-            read_link_config
+            return unless config_present?(output)
 
             prompt = ::TTY::Prompt.new
             provider = prompt.select('Setting up:', PROVIDERS_LIST)
@@ -24,8 +24,6 @@ module Sfctl
             when TOGGL_PROVIDER
               setup_toggl_provider!(output, prompt)
             end
-          rescue TTY::Config::ReadError
-            output.puts @pastel.yellow('Please initialize time before continue.')
           end
 
           private
@@ -37,7 +35,7 @@ module Sfctl
 
           def save_toggl_config!(output, access_token)
             config.set("providers.#{TOGGL_PROVIDER}.access_token", value: access_token)
-            save_link_config!
+            save_config!
             output.puts @pastel.green('Everything saved.')
           end
 

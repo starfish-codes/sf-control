@@ -1,7 +1,7 @@
 require 'sfctl/commands/time/providers/set'
 
 RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
-  let(:link_config_file) { '.sflink' }
+  let(:config_file) { '.sfctl' }
   let(:output) { StringIO.new }
   let(:options) do
     { 'no-color' => true }
@@ -9,32 +9,33 @@ RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
   let(:toggl_provider) { 'toggl' }
 
   before do
-    stub_const('Sfctl::Command::LINK_CONFIG_PATH', tmp_path(link_config_file))
+    stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
   end
 
-  it 'should shown an error if .sflink is not initialized' do
+  it 'should shown an error if .sfctl is not initialized' do
     described_class.new(options).execute(output: output)
 
-    expect(output.string).to include 'Please initialize time before continue.'
+    expect(output.string).to include 'Please authentificate before continue.'
   end
 
   it 'should ask for replace if provider alredy defined' do
-    config_path = fixtures_path(link_config_file)
-    ::FileUtils.cp(config_path, tmp_path(link_config_file))
-    expect(File.file?(tmp_path(link_config_file))).to be_truthy
+    config_path = fixtures_path(config_file)
+    ::FileUtils.cp(config_path, tmp_path(config_file))
+    expect(File.file?(tmp_path(config_file))).to be_truthy
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).and_return(toggl_provider)
     expect_any_instance_of(TTY::Prompt).to receive(:yes?).with('Do you want to replace it?').and_return(false)
 
     described_class.new(options).execute(output: output)
 
-    expect(File.read(tmp_path(link_config_file))).to include toggl_provider
+    expect(File.read(tmp_path(config_file))).to include toggl_provider
   end
 
   it 'should set a new toggl provider' do
     access_token = 'test_access_token'
 
-    ::FileUtils.touch tmp_path(link_config_file)
+    ::FileUtils.touch tmp_path(config_file)
+    File.write tmp_path(config_file), "---\naccess_token: correctToken"
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).and_return(toggl_provider)
 
@@ -50,8 +51,8 @@ RSpec.describe Sfctl::Commands::Time::Providers::Set, type: :unit do
 
     expect(output.string).to include 'Everything saved.'
 
-    expect(File.file?(tmp_path(link_config_file))).to be_truthy
-    file_data = File.read(tmp_path(link_config_file))
+    expect(File.file?(tmp_path(config_file))).to be_truthy
+    file_data = File.read(tmp_path(config_file))
     expect(file_data).to include toggl_provider
     expect(file_data).to include access_token
   end
