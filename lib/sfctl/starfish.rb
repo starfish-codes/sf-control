@@ -1,6 +1,5 @@
 require 'faraday'
 require 'json'
-require 'pastel'
 
 module Sfctl
   module Starfish
@@ -35,6 +34,18 @@ module Sfctl
       api_conn = conn(endpoint, token)
       response = all ? api_conn.get('assignments?all=1') : api_conn.get('assignments')
       parsed_response(response)
+    end
+
+    def self.next_report(endpoint, token, assignment_id)
+      api_conn = conn(endpoint, token)
+      response = api_conn.get("assignments/#{assignment_id}/next_report")
+      parsed_response(response)
+    end
+
+    def self.update_next_report(endpoint, token, assignment_id, items)
+      api_conn = conn(endpoint, token)
+      response = api_conn.put("assignments/#{assignment_id}/next_report", JSON.generate(items: items))
+      response.status == 204
     end
   end
 end

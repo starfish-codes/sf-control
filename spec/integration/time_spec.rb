@@ -13,6 +13,7 @@ RSpec.describe "'sfctl time providers' command", type: :cli do
         sfctl time help [COMMAND]            # Describe subcommands or one specific...
         sfctl time init                      # You can use the following command to...
         sfctl time providers [SUBCOMMAND]    # Manage providers.
+        sfctl time sync                      # Synchronize data with providers.
 
     HEREDOC
 
