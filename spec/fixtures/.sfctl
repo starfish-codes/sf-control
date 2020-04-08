@@ -1,2 +1,5 @@
 ---
 access_token: correctToken
+providers:
+  toggl:
+    access_token: 'test_access_token'

@@ -19,13 +19,14 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     ::FileUtils.cp(config_path, tmp_path(config_file))
     ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
   end
+  let(:assignment_id) { 1010 }
   let(:assignment_name) { 'Test assignment' }
   let(:assignments_response_body) do
     <<~HEREDOC
       {
         "assignments": [
           {
-            "id": 1,
+            "id": #{assignment_id},
             "name": "#{assignment_name}",
             "service": "Engineering",
             "start_date": "2020-01-01",
@@ -82,12 +83,13 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   it 'should add new connection' do
     copy_config_files_to_tmp
 
+    assignment_id = '1012'
     assignment_name = 'Test assignment 2'
     assignments_response_body = <<~HEREDOC
       {
         "assignments": [
           {
-            "id": 1,
+            "id": #{assignment_id},
             "name": "#{assignment_name}",
             "service": "Engineering",
             "start_date": "2020-01-01",
@@ -104,7 +106,8 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
       .and_return(toggl_provider)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:').and_return(assignment_name)
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+      .and_return({ 'id' => assignment_id, 'name' => assignment_name })
 
     workspace_id = 'test_workspace_id'
     expect_any_instance_of(TTY::Prompt).to receive(:ask)

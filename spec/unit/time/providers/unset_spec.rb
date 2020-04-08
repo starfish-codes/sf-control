@@ -1,7 +1,7 @@
 require 'sfctl/commands/time/providers/unset'
 
 RSpec.describe Sfctl::Commands::Time::Providers::Unset, type: :unit do
-  let(:link_config_file) { '.sflink' }
+  let(:config_file) { '.sfctl' }
   let(:output) { StringIO.new }
   let(:options) do
     { 'no-color' => true }
@@ -9,17 +9,18 @@ RSpec.describe Sfctl::Commands::Time::Providers::Unset, type: :unit do
   let(:toggl_provider) { 'toggl' }
 
   before do
-    stub_const('Sfctl::Command::LINK_CONFIG_PATH', tmp_path(link_config_file))
+    stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
   end
 
-  it 'should shown an error if .sflink is not initialized' do
+  it 'should shown an error if .sfctl is not initialized' do
     described_class.new(options).execute(output: output)
 
-    expect(output.string).to include 'Please initialize time before continue.'
+    expect(output.string).to include 'Please authentificate before continue.'
   end
 
   it 'should ask for replace if provider alredy defined' do
-    ::FileUtils.touch tmp_path(link_config_file)
+    ::FileUtils.touch tmp_path(config_file)
+    File.write tmp_path(config_file), "---\naccess_token: correctToken"
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).and_return(toggl_provider)
 
@@ -29,9 +30,9 @@ RSpec.describe Sfctl::Commands::Time::Providers::Unset, type: :unit do
   end
 
   it 'should set a new toggl provider' do
-    link_config_path = fixtures_path(link_config_file)
-    ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
-    expect(File.file?(tmp_path(link_config_file))).to be_truthy
+    config_path = fixtures_path(config_file)
+    ::FileUtils.cp(config_path, tmp_path(config_file))
+    expect(File.file?(tmp_path(config_file))).to be_truthy
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).and_return(toggl_provider)
     expect_any_instance_of(TTY::Prompt).to receive(:yes?).with('Do you want to remove the delete the configuration?')
@@ -41,7 +42,7 @@ RSpec.describe Sfctl::Commands::Time::Providers::Unset, type: :unit do
 
     expect(output.string).to include "Configuration for provider [#{toggl_provider}] was successfully deleted."
 
-    file_data = File.read(tmp_path(link_config_file))
+    file_data = File.read(tmp_path(config_file))
     expect(file_data).to include 'providers: {}'
   end
 end

@@ -28,22 +28,22 @@ module Sfctl
           private
 
           def print_connections(output)
-            config.fetch(:connections).each_key do |assignment_name|
-              case config.fetch(:connections, assignment_name, :provider)
+            config.fetch(:connections).each_key do |assignment_id|
+              case config.fetch(:connections, assignment_id, :provider)
               when TOGGL_PROVIDER
-                print_toggl_connection!(output, assignment_name)
+                print_toggl_connection!(output, assignment_id)
               end
             end
           end
 
-          def print_toggl_connection!(output, assignment_name)
-            output.puts "Connection: #{assignment_name}"
+          def print_toggl_connection!(output, assignment_id)
+            output.puts "Connection: #{config.fetch(:connections, assignment_id, :name)}"
             output.puts "  provider: #{TOGGL_PROVIDER}"
-            output.puts "  workspace_id: #{config.fetch(:connections, assignment_name, :workspace_id)}"
-            output.puts "  project_ids: #{config.fetch(:connections, assignment_name, :project_ids)}"
-            output.puts "  task_ids: #{config.fetch(:connections, assignment_name, :task_ids)}"
-            output.puts "  billable: #{config.fetch(:connections, assignment_name, :billable)}"
-            output.puts "  rounding: #{config.fetch(:connections, assignment_name, :rounding)}"
+            output.puts "  workspace_id: #{config.fetch(:connections, assignment_id, :workspace_id)}"
+            output.puts "  project_ids: #{config.fetch(:connections, assignment_id, :project_ids)}"
+            output.puts "  task_ids: #{config.fetch(:connections, assignment_id, :task_ids)}"
+            output.puts "  billable: #{config.fetch(:connections, assignment_id, :billable)}"
+            output.puts "  rounding: #{config.fetch(:connections, assignment_id, :rounding)}"
             output.puts
           end
         end
