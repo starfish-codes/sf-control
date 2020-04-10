@@ -19,6 +19,16 @@ module Sfctl
       [response.status == 200, JSON.parse(response.body)]
     end
 
+    def self.workspaces(token)
+      response = conn(token).get('workspaces')
+      parsed_response(response)
+    end
+
+    def self.workspace_projects(token, workspace_id)
+      response = conn(token).get("workspaces/#{workspace_id}/projects")
+      parsed_response(response)
+    end
+
     def self.time_entries(token, params)
       response = conn(token).get('time_entries', params)
       parsed_response(response)

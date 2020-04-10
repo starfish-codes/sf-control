@@ -1,4 +1,4 @@
-require 'tty-prompt'
+require 'date'
 require 'sfctl/commands/time/connections/add'
 
 RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
@@ -15,6 +15,14 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   end
   let(:toggl_provider) { 'toggl' }
   let(:assignments_url) { "#{options['starfish-host']}/api/v1/assignments" }
+  let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
+  let(:workspace_id) { 'test_workspace_id' }
+  let(:toggl_projects_url) { "https://www.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
+  let(:toggl_time_entries_body) do
+    <<~HEREDOC
+      https://www.toggl.com/api/v8/time_entries?end_date=#{Date.today}T23:59:59%2B00:00&start_date=#{Date.today - 90}T00:00:00%2B00:00&wid=test_workspace_id
+    HEREDOC
+  end
   let(:copy_config_files_to_tmp) do
     ::FileUtils.cp(config_path, tmp_path(config_file))
     ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
@@ -104,6 +112,9 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     HEREDOC
 
     stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+    stub_request(:get, toggl_projects_url).to_return(body: '{}', status: 200)
+    stub_request(:get, toggl_time_entries_body).to_return(body: '{}', status: 200)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
       .and_return(toggl_provider)
@@ -111,19 +122,15 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
       .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
-    workspace_id = 'test_workspace_id'
-    expect_any_instance_of(TTY::Prompt).to receive(:ask)
-      .with('Workspace ID (required):', required: true)
-      .and_return(workspace_id)
+    workspace = { 'id' => workspace_id, name: 'Test workspace' }
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
 
-    project_ids = 'project_id1, project_id2'
-    expect_any_instance_of(TTY::Prompt).to receive(:ask)
-      .with('Project IDs  (required / comma separated):', required: true)
+    project_ids = %w[project_id1 project_id2]
+    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:')
       .and_return(project_ids)
 
-    task_ids = 'task_ids1, task_ids2, task_ids3, task_ids4'
-    expect_any_instance_of(TTY::Prompt).to receive(:ask)
-      .with('Task IDs     (optional / comma separated):')
+    task_ids = %w[task_ids1 task_ids2 task_ids3 task_ids4]
+    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Tasks(by last 3 months):')
       .and_return(task_ids)
 
     billable = 'yes'
@@ -146,8 +153,8 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect(file_data).to include assignment_service
     expect(file_data).to include toggl_provider
     expect(file_data).to include workspace_id
-    expect(file_data).to include project_ids
-    expect(file_data).to include task_ids
+    expect(file_data).to include project_ids.join(', ')
+    expect(file_data).to include task_ids.join(', ')
     expect(file_data).to include billable
     expect(file_data).to include rounding
   end
