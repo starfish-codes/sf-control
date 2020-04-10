@@ -11,7 +11,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     }
   end
   let(:assignment_id) { 1010 }
-  let(:assignments_url) { "#{options['starfish-host']}/api/v1/assignments" }
   let(:next_report_url) { "#{options['starfish-host']}/api/v1/assignments/#{assignment_id}/next_report" }
   let(:toggl_token) { 'test_toggl_token' }
   let(:toggl_url) do
@@ -93,47 +92,19 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
   it 'should return an error if not able to fetch assignments' do
     copy_config_file
-    copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: '{"error":"forbidden"}', status: 403)
-
-    described_class.new(options).execute(output: output)
-
-    expect(output.string).to include 'Something went wrong. Unable to fetch assignments'
-  end
-
-  it 'should return an error that connection not created' do
-    copy_config_file
-    copy_link_config_file
-    assignment_id = 1000
-    assignment_name = 'Not connected assignment'
-    assignments_body = <<~HEREDOC
-      {
-        "assignments": [
-          {
-            "id": #{assignment_id},
-            "name": "#{assignment_name}",
-            "service": "Test service"
-          }
-        ]
-      }
-    HEREDOC
-
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
-
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
-      .and_return(assignment_id)
+    ::FileUtils.touch tmp_path(link_config_file)
+    expect(File.file?(tmp_path(link_config_file))).to be_truthy
+    File.write tmp_path(link_config_file), "---\nconnections: {}"
 
     described_class.new(options).execute(output: output)
-
-    expect(output.string).to include "Unable to find a connection for assignment \"#{assignment_name}\""
+    expect(output.string).to include 'Please add a connection before continue.'
   end
 
   it 'should return an error that next report is not exists' do
     copy_config_file
     copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: '{}', status: 404)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
@@ -151,7 +122,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     copy_config_file
     copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
     stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
 
@@ -177,7 +147,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       }
     HEREDOC
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
     stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
 
@@ -196,7 +165,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     copy_config_file
     copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
     stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
     stub_request(:put, next_report_url).to_return(body: '{}', status: 404)
@@ -214,7 +182,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     copy_config_file
     copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
     stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
     stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
@@ -252,7 +219,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     copy_config_file
     copy_link_config_file
 
-    stub_request(:get, assignments_url).to_return(body: assignments_body, status: 200)
     stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
     stub_request(:get, toggl_url).to_return(body: '', status: 200)
 
