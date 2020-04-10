@@ -197,7 +197,7 @@ module Sfctl
         def assignment_items(time_entries)
           time_entries.map do |te|
             {
-              time: humanize_duration(te['duration']),
+              time: humanize_duration(te['duration']).to_f,
               date: Date.parse(te['start']).to_s,
               comment: te['description']
             }
