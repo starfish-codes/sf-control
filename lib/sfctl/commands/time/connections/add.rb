@@ -1,8 +1,10 @@
+require 'date'
 require 'pastel'
+require 'tty-spinner'
 require 'tty-prompt'
 require_relative '../../../command'
 require_relative '../../../starfish'
-require 'pry'
+require_relative '../../../toggl'
 
 module Sfctl
   module Commands
@@ -38,7 +40,7 @@ module Sfctl
 
             case provider
             when TOGGL_PROVIDER
-              setup_toggl_connection!(assignment_obj)
+              setup_toggl_connection!(output, assignment_obj)
             end
 
             save_link_config!
@@ -65,20 +67,59 @@ module Sfctl
             list
           end
 
-          def setup_toggl_connection!(assignment_obj) # rubocop:disable Metrics/AbcSize
+          def setup_toggl_connection!(output, assignment_obj) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+            spinner = ::TTY::Spinner.new('[:spinner] Loading ...')
+
             assignment_id = assignment_obj['id']
-            workspace_id = @prompt.ask('Workspace ID (required):', required: true)
-            project_ids = @prompt.ask('Project IDs  (required / comma separated):', required: true)
-            task_ids = @prompt.ask('Task IDs     (optional / comma separated):') || ''
+            toggl_token = read_link_config['providers'][TOGGL_PROVIDER]['access_token']
+
+            spinner.auto_spin
+            _success, workspaces = Toggl.workspaces(toggl_token)
+            spinner.pause
+            output.puts
+            workspace = @prompt.select('Please select Workspace:') do |menu|
+              workspaces.each do |w|
+                menu.choice name: w['name'], value: w
+              end
+            end
+            workspace_id = workspace['id']
+
+            spinner.resume
+            _success, projects = Toggl.workspace_projects(toggl_token, workspace_id)
+            spinner.pause
+            output.puts
+            project_ids = @prompt.multi_select('Please select Projects:') do |menu|
+              projects.each do |project|
+                menu.choice project['name'], project['id']
+              end
+            end
+
+            time_entries_params = {
+              wid: workspace_id,
+              start_date: "#{Date.today - 90}T00:00:00+00:00",
+              end_date: "#{Date.today}T23:59:59+00:00"
+            }
+            spinner.resume
+            _success, time_entries = Toggl.time_entries(toggl_token, time_entries_params)
+            time_entries.delete_if { |te| !project_ids.include?(te['pid']) } unless project_ids.empty?
+            spinner.success
+            output.puts
+            time_entries_ids = @prompt.multi_select('Please select Tasks(by last 3 months):') do |menu|
+              time_entries.each do |time_entry|
+                menu.choice time_entry['description'], time_entry['id']
+              end
+            end
+
             billable = @prompt.select('Billable?    (required)', %w[yes no both])
+
             rounding = @prompt.select('Rounding?    (required)', %w[on off])
 
             config.set("connections.#{assignment_id}.name", value: assignment_obj['name'])
             config.set("connections.#{assignment_id}.service", value: assignment_obj['service'])
             config.set("connections.#{assignment_id}.provider", value: TOGGL_PROVIDER)
-            config.set("connections.#{assignment_id}.workspace_id", value: workspace_id)
-            config.set("connections.#{assignment_id}.project_ids", value: project_ids)
-            config.set("connections.#{assignment_id}.task_ids", value: task_ids)
+            config.set("connections.#{assignment_id}.workspace_id", value: workspace_id.to_s)
+            config.set("connections.#{assignment_id}.project_ids", value: project_ids.join(', '))
+            config.set("connections.#{assignment_id}.task_ids", value: time_entries_ids.join(', '))
             config.set("connections.#{assignment_id}.billable", value: billable)
             config.set("connections.#{assignment_id}.rounding", value: rounding)
           end
