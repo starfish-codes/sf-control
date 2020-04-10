@@ -10,6 +10,7 @@ RSpec.describe Sfctl::Commands::Auth::Init, type: :unit do
     }
   end
   let(:check_auth_url) { "#{options['starfish-host']}/api/v1/profile" }
+  let(:ask_text) { "Access token(#{options['starfish-host']}):" }
 
   before do
     stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
@@ -18,7 +19,9 @@ RSpec.describe Sfctl::Commands::Auth::Init, type: :unit do
   it 'should do nothing if token is not correct' do
     stub_request(:get, check_auth_url).to_return(body: { 'error': 'forbidden' }.to_s, status: 403)
 
-    command = described_class.new('wrongToken', options)
+    expect_any_instance_of(TTY::Prompt).to receive(:ask).with(ask_text, required: true).and_return('wrongToken')
+
+    command = described_class.new(options)
 
     command.execute(output: output)
 
@@ -31,7 +34,9 @@ RSpec.describe Sfctl::Commands::Auth::Init, type: :unit do
     response_body = { 'email' => 'test-user@mail.com', 'name' => 'Test User' }.to_s
     stub_request(:get, check_auth_url).to_return(body: response_body, status: 200)
 
-    command = described_class.new('correctToken', options)
+    expect_any_instance_of(TTY::Prompt).to receive(:ask).with(ask_text, required: true).and_return('correctToken')
+
+    command = described_class.new(options)
 
     command.execute(output: output)
 
