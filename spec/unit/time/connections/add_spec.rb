@@ -21,6 +21,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   end
   let(:assignment_id) { 1010 }
   let(:assignment_name) { 'Test assignment' }
+  let(:assignment_service) { 'Test service' }
   let(:assignments_response_body) do
     <<~HEREDOC
       {
@@ -28,7 +29,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
           {
             "id": #{assignment_id},
             "name": "#{assignment_name}",
-            "service": "Engineering",
+            "service": "#{assignment_service}",
             "start_date": "2020-01-01",
             "end_date": "2020-05-15",
             "budget": 40,
@@ -85,13 +86,14 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
 
     assignment_id = '1012'
     assignment_name = 'Test assignment 2'
+    assignment_service = 'Test service 2'
     assignments_response_body = <<~HEREDOC
       {
         "assignments": [
           {
             "id": #{assignment_id},
             "name": "#{assignment_name}",
-            "service": "Engineering",
+            "service": "#{assignment_service}",
             "start_date": "2020-01-01",
             "end_date": "2020-05-15",
             "budget": 40,
@@ -107,7 +109,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
       .and_return(toggl_provider)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
-      .and_return({ 'id' => assignment_id, 'name' => assignment_name })
+      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
     workspace_id = 'test_workspace_id'
     expect_any_instance_of(TTY::Prompt).to receive(:ask)
@@ -141,6 +143,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     file_data = File.read(tmp_path(link_config_file))
     expect(file_data).to include 'connections:'
     expect(file_data).to include assignment_name
+    expect(file_data).to include assignment_service
     expect(file_data).to include toggl_provider
     expect(file_data).to include workspace_id
     expect(file_data).to include project_ids

@@ -21,20 +21,32 @@ module Sfctl
         def execute(output: $stdout)
           return if !config_present?(output) || !link_config_present?(output)
 
-          success, data = Starfish.account_assignments(@options['starfish-host'], @options['all'], access_token)
-          unless success
-            output.puts @pastel.red('Something went wrong. Unable to fetch assignments')
+          if read_link_config['connections'].length.zero?
+            output.puts @pastel.red('Please add a connection before continue.')
             return
           end
 
-          sync_assignments(output, assignments_to_sync(data['assignments']))
+          sync_assignments(output, assignments_to_sync)
         rescue ThreadError, JSON::ParserError
           output.puts @pastel.red('Something went wrong.')
         end
 
         private
 
-        def assignments_to_sync(assignments)
+        def assignments_from_connections
+          read_link_config['connections'].map do |con|
+            id = con[0]
+            asmnt = con[1]
+            {
+              'id' => id,
+              'name' => asmnt['name'],
+              'service' => asmnt['service'] || '-'
+            }
+          end
+        end
+
+        def assignments_to_sync
+          assignments = assignments_from_connections
           assignment_id = select_assignment(assignments)
 
           return assignments if assignment_id == 'all'

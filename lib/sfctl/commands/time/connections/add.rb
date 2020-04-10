@@ -52,7 +52,7 @@ module Sfctl
             @prompt.select('Select assignment:') do |menu|
               assignments.each.with_index do |asmnt, i|
                 menu.choice name: "#{i + 1}. #{asmnt['name']} / #{asmnt['service']}",
-                            value: { 'id' => asmnt['id'], 'name' => asmnt['name'] }
+                            value: { 'id' => asmnt['id'], 'name' => asmnt['name'], 'service' => asmnt['service'] }
               end
             end
           end
@@ -74,6 +74,7 @@ module Sfctl
             rounding = @prompt.select('Rounding?    (required)', %w[on off])
 
             config.set("connections.#{assignment_id}.name", value: assignment_obj['name'])
+            config.set("connections.#{assignment_id}.service", value: assignment_obj['service'])
             config.set("connections.#{assignment_id}.provider", value: TOGGL_PROVIDER)
             config.set("connections.#{assignment_id}.workspace_id", value: workspace_id)
             config.set("connections.#{assignment_id}.project_ids", value: project_ids)

@@ -22,12 +22,12 @@ module Sfctl
         which can be created on the profile page of your account.
       HEREDOC
       method_option :help, aliases: '-h', type: :boolean
-      def init(access_token)
+      def init(*)
         if options[:help]
           invoke :help, ['init']
         else
           require_relative 'auth/init'
-          Sfctl::Commands::Auth::Init.new(access_token, options).execute
+          Sfctl::Commands::Auth::Init.new(options).execute
         end
       end
     end

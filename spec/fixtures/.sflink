@@ -2,6 +2,7 @@
 connections:
   '1010':
     name: Test assignment
+    service: Test service
     provider: toggl
     workspace_id: '11111'
     project_ids: '2222, 3333'
