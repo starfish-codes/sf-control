@@ -89,7 +89,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect(output.string).to include 'All assignments already added.'
   end
 
-  it 'should add new connection' do
+  it 'should return an error if not able to fetch toggl projects' do
     copy_config_files_to_tmp
 
     assignment_id = '1012'
@@ -114,6 +114,47 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
     stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
     stub_request(:get, toggl_projects_url).to_return(body: '{}', status: 200)
+
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
+      .and_return(toggl_provider)
+
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+
+    workspace = { 'id' => workspace_id, name: 'Test workspace' }
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+
+    described_class.new(options).execute(output: output)
+
+    error_message = "There is no projects. Please visit #{toggl_provider} and create them before continue."
+    expect(output.string).to include error_message
+  end
+
+  it 'should add new connection' do
+    copy_config_files_to_tmp
+
+    assignment_id = '1012'
+    assignment_name = 'Test assignment 2'
+    assignment_service = 'Test service 2'
+    assignments_response_body = <<~HEREDOC
+      {
+        "assignments": [
+          {
+            "id": #{assignment_id},
+            "name": "#{assignment_name}",
+            "service": "#{assignment_service}",
+            "start_date": "2020-01-01",
+            "end_date": "2020-05-15",
+            "budget": 40,
+            "unit": "hours"
+          }
+        ]
+      }
+    HEREDOC
+
+    stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+    stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
     stub_request(:get, toggl_time_entries_body).to_return(body: '{}', status: 200)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
@@ -135,12 +176,12 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
 
     billable = 'yes'
     expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Billable?    (required)', %w[yes no both])
+      .with('Billable?', %w[yes no both])
       .and_return(billable)
 
     rounding = 'on'
     expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Rounding?    (required)', %w[on off])
+      .with('Rounding?', %w[on off])
       .and_return(rounding)
 
     described_class.new(options).execute(output: output)

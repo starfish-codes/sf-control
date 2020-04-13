@@ -53,11 +53,20 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
           "id": 4444,
           "start": "2020-12-10",
           "duration": 10800,
-          "description": "Test time entry"
+          "description": "Test non-billable time entry",
+          "billable": false
+        },
+        {
+          "id": 5555,
+          "start": "2020-12-10",
+          "duration": 9000,
+          "description": "Test billable time entry",
+          "billable": true
         }
       ]
     HEREDOC
   end
+  let(:table_headers) { %w[Date Comment Time] }
   let(:copy_config_file) do
     config_path = fixtures_path(config_file)
     ::FileUtils.cp(config_path, tmp_path(config_file))
@@ -228,5 +237,199 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     described_class.new(options).execute(output: output)
 
     expect(output.string).to include 'Something went wrong.'
+  end
+
+  context 'billable/non-billable/both time entries.' do
+    it 'should print only billable time entries' do
+      copy_config_file
+      copy_link_config_file
+
+      stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+      stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return('all')
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test billable time entry', '2.50h'],
+            ['Total:', '', '2.50h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should print only non-billable time entries' do
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '1010':
+            name: Test assignment
+            service: Test service
+            provider: toggl
+            workspace_id: '11111'
+            project_ids: '2222, 3333'
+            task_ids: '4444, 5555, 6666, 7777'
+            billable: 'no'
+            rounding: 'off'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+      stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return('all')
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test non-billable time entry', '3h'],
+            ['Total:', '', '3h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should print both time entries' do
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '1010':
+            name: Test assignment
+            service: Test service
+            provider: toggl
+            workspace_id: '11111'
+            project_ids: '2222, 3333'
+            task_ids: '4444, 5555, 6666, 7777'
+            billable: 'both'
+            rounding: 'off'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+      stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return('all')
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test non-billable time entry', '3h'],
+            ['2020-12-10', 'Test billable time entry', '2.50h'],
+            ['Total:', '', '5.50h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+  end
+
+  context 'rounding on/off' do
+    let(:toggl_time_entries_body) do
+      <<~HEREDOC
+        [
+          {
+            "id": 4444,
+            "start": "2020-12-10",
+            "duration": 12500,
+            "description": "Test time entry",
+            "billable": true
+          }
+        ]
+      HEREDOC
+    end
+
+    it 'should not round the value' do
+      copy_config_file
+      copy_link_config_file
+
+      stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+      stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return('all')
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test time entry', '3.46h'],
+            ['Total:', '', '3.46h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should round the value' do
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '1010':
+            name: Test assignment
+            service: Test service
+            provider: toggl
+            workspace_id: '11111'
+            project_ids: '2222, 3333'
+            task_ids: '4444, 5555, 6666, 7777'
+            billable: 'both'
+            rounding: 'on'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+      stub_request(:put, next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return('all')
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test time entry', '3.50h'],
+            ['Total:', '', '3.50h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
   end
 end

@@ -6,6 +6,7 @@ gemspec
 gem 'faraday'
 gem 'pastel'
 gem 'rake', '~> 12.0'
+gem 'rounding'
 gem 'thor'
 gem 'tty-box'
 gem 'tty-color'
