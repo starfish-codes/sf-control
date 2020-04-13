@@ -5,6 +5,7 @@ require 'tty-prompt'
 require_relative '../../../command'
 require_relative '../../../starfish'
 require_relative '../../../toggl'
+require 'pry'
 
 module Sfctl
   module Commands
@@ -14,7 +15,7 @@ module Sfctl
           def initialize(options)
             @options = options
             @pastel = Pastel.new(enabled: !@options['no-color'])
-            @prompt = ::TTY::Prompt.new
+            @prompt = ::TTY::Prompt.new(help_color: :cyan)
           end
 
           def execute(output: $stdout) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
@@ -43,12 +44,18 @@ module Sfctl
               setup_toggl_connection!(output, assignment_obj)
             end
 
+            delete_providers_from_link_config!
             save_link_config!
 
             output.puts @pastel.green('Connection successfully added.')
           end
 
           private
+
+          def delete_providers_from_link_config!
+            config.set(:providers, value: '')
+            config.delete(:providers)
+          end
 
           def select_assignment(assignments)
             @prompt.select('Select assignment:') do |menu|
@@ -88,7 +95,7 @@ module Sfctl
             _success, projects = Toggl.workspace_projects(toggl_token, workspace_id)
             spinner.pause
             output.puts
-            project_ids = @prompt.multi_select('Please select Projects:') do |menu|
+            project_ids = @prompt.multi_select('Please select Projects:', min: 1) do |menu|
               projects.each do |project|
                 menu.choice project['name'], project['id']
               end

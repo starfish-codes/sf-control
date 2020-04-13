@@ -126,7 +126,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
 
     project_ids = %w[project_id1 project_id2]
-    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:')
+    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
       .and_return(project_ids)
 
     task_ids = %w[task_ids1 task_ids2 task_ids3 task_ids4]
