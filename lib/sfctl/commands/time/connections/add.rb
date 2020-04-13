@@ -18,7 +18,7 @@ module Sfctl
             @prompt = ::TTY::Prompt.new(help_color: :cyan)
           end
 
-          def execute(output: $stdout) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+          def execute(output: $stdout) # rubocop:disable Metrics/AbcSize
             return if !config_present?(output) || !link_config_present?(output)
 
             ltoken = access_token
@@ -43,14 +43,16 @@ module Sfctl
             when TOGGL_PROVIDER
               setup_toggl_connection!(output, assignment_obj)
             end
+          end
 
+          private
+
+          def clear_conf_and_print_success!(output)
             delete_providers_from_link_config!
             save_link_config!
 
             output.puts @pastel.green('Connection successfully added.')
           end
-
-          private
 
           def delete_providers_from_link_config!
             config.set(:providers, value: '')
@@ -93,6 +95,14 @@ module Sfctl
 
             spinner.resume
             _success, projects = Toggl.workspace_projects(toggl_token, workspace_id)
+
+            if projects.nil? || projects.empty?
+              spinner.stop
+              error_message = "There is no projects. Please visit #{TOGGL_PROVIDER} and create them before continue."
+              output.puts @pastel.red(error_message)
+              return
+            end
+
             spinner.pause
             output.puts
             project_ids = @prompt.multi_select('Please select Projects:', min: 1) do |menu|
@@ -117,9 +127,9 @@ module Sfctl
               end
             end
 
-            billable = @prompt.select('Billable?    (required)', %w[yes no both])
+            billable = @prompt.select('Billable?', %w[yes no both])
 
-            rounding = @prompt.select('Rounding?    (required)', %w[on off])
+            rounding = @prompt.select('Rounding?', %w[on off])
 
             config.set("connections.#{assignment_id}.name", value: assignment_obj['name'])
             config.set("connections.#{assignment_id}.service", value: assignment_obj['service'])
@@ -129,6 +139,8 @@ module Sfctl
             config.set("connections.#{assignment_id}.task_ids", value: time_entries_ids.join(', '))
             config.set("connections.#{assignment_id}.billable", value: billable)
             config.set("connections.#{assignment_id}.rounding", value: rounding)
+
+            clear_conf_and_print_success!(output)
           end
         end
       end
