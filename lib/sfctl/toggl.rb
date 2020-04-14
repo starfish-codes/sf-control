@@ -3,13 +3,16 @@ require 'json'
 
 module Sfctl
   module Toggl
-    def self.conn(token)
+    DEFAULT_API_PATH = 'api/v8/'.freeze
+    REPORTS_API_PATH = 'reports/api/v2/'.freeze
+
+    def self.conn(token, api = 'default')
       raise 'Please set toggl provider before continue.' if token.nil?
 
-      headers = {
-        'Content-Type' => 'application/json'
-      }
-      Faraday.new(url: "https://#{token}:api_token@www.toggl.com/api/v8/", headers: headers) do |builder|
+      api_path = api == 'reports' ? REPORTS_API_PATH : DEFAULT_API_PATH
+
+      headers = { 'Content-Type' => 'application/json' }
+      Faraday.new(url: "https://#{token}:api_token@www.toggl.com/#{api_path}", headers: headers) do |builder|
         builder.request :retry
         builder.adapter :net_http
       end
@@ -29,8 +32,17 @@ module Sfctl
       parsed_response(response)
     end
 
+    def self.project_tasks(token, project_id)
+      response = conn(token).get("workspaces/#{project_id}/tasks")
+
+      return [] if response.body.length.zero?
+
+      parsed_response(response)
+    end
+
     def self.time_entries(token, params)
-      response = conn(token).get('time_entries', params)
+      params[:user_agent] = 'api_test'
+      response = conn(token, 'reports').get('details', params)
       parsed_response(response)
     end
   end

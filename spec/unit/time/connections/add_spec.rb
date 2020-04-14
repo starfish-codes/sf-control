@@ -18,11 +18,6 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
   let(:workspace_id) { 'test_workspace_id' }
   let(:toggl_projects_url) { "https://www.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
-  let(:toggl_time_entries_body) do
-    <<~HEREDOC
-      https://www.toggl.com/api/v8/time_entries?end_date=#{Date.today}T23:59:59%2B00:00&start_date=#{Date.today - 90}T00:00:00%2B00:00&wid=test_workspace_id
-    HEREDOC
-  end
   let(:copy_config_files_to_tmp) do
     ::FileUtils.cp(config_path, tmp_path(config_file))
     ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
@@ -130,6 +125,65 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect(output.string).to include error_message
   end
 
+  it 'should return a message that there is no tasks' do
+    copy_config_files_to_tmp
+
+    assignment_id = '1012'
+    assignment_name = 'Test assignment 2'
+    assignment_service = 'Test service 2'
+    assignments_response_body = <<~HEREDOC
+      {
+        "assignments": [
+          {
+            "id": #{assignment_id},
+            "name": "#{assignment_name}",
+            "service": "#{assignment_service}",
+            "start_date": "2020-01-01",
+            "end_date": "2020-05-15",
+            "budget": 40,
+            "unit": "hours"
+          }
+        ]
+      }
+    HEREDOC
+
+    stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+    stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
+    selected_project_id = 'project_id1'
+    toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+    stub_request(:get, toggl_tasks_url).to_return(body: '[]', status: 200)
+
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
+      .and_return(toggl_provider)
+
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+
+    workspace = { 'id' => workspace_id, name: 'Test workspace' }
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+
+    project_ids = [selected_project_id]
+    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
+      .and_return(project_ids)
+
+    expect_any_instance_of(TTY::Prompt).not_to receive(:multi_select).with('Please select Tasks(by last 3 months):')
+
+    billable = 'yes'
+    expect_any_instance_of(TTY::Prompt).to receive(:select)
+      .with('Billable?', %w[yes no both])
+      .and_return(billable)
+
+    rounding = 'on'
+    expect_any_instance_of(TTY::Prompt).to receive(:select)
+      .with('Rounding?', %w[on off])
+      .and_return(rounding)
+
+    described_class.new(options).execute(output: output)
+
+    expect(output.string).to include "You don't have tasks. Continue..."
+  end
+
   it 'should add new connection' do
     copy_config_files_to_tmp
 
@@ -155,7 +209,9 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
     stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
     stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
-    stub_request(:get, toggl_time_entries_body).to_return(body: '{}', status: 200)
+    selected_project_id = 'project_id1'
+    toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+    stub_request(:get, toggl_tasks_url).to_return(body: '{}', status: 200)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
       .and_return(toggl_provider)
@@ -166,7 +222,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     workspace = { 'id' => workspace_id, name: 'Test workspace' }
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
 
-    project_ids = %w[project_id1 project_id2]
+    project_ids = [selected_project_id]
     expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
       .and_return(project_ids)
 
