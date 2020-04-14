@@ -15,7 +15,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   let(:toggl_token) { 'test_toggl_token' }
   let(:toggl_url) do
     <<~HEREDOC
-      https://www.toggl.com/reports/api/v2/details?project_ids=2222,%203333&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+      https://www.toggl.com/reports/api/v2/details?billable=yes&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
     HEREDOC
   end
   let(:assignment_name) { 'Test assignment' }
@@ -66,7 +66,6 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
           }
         ]
       }
-
     HEREDOC
   end
   let(:table_headers) { %w[Date Comment Time] }
@@ -244,6 +243,20 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
   context 'billable/non-billable/both time entries.' do
     it 'should print only billable time entries' do
+      toggl_time_entries_body = <<~HEREDOC
+        {
+          "data": [
+            {
+              "id": 5555,
+              "start": "2020-12-10",
+              "dur": 9000000,
+              "description": "Test billable time entry",
+              "billable": true
+            }
+          ]
+        }
+      HEREDOC
+
       copy_config_file
       copy_link_config_file
 
@@ -270,6 +283,24 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     end
 
     it 'should print only non-billable time entries' do
+      toggl_url = <<~HEREDOC
+        https://www.toggl.com/reports/api/v2/details?billable=no&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+      HEREDOC
+
+      toggl_time_entries_body = <<~HEREDOC
+        {
+          "data": [
+            {
+              "id": 4444,
+              "start": "2020-12-10",
+              "dur": 10800000,
+              "description": "Test non-billable time entry",
+              "billable": false
+            }
+          ]
+        }
+      HEREDOC
+
       copy_config_file
 
       ::FileUtils.touch tmp_path(link_config_file)
@@ -311,6 +342,10 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     end
 
     it 'should print both time entries' do
+      toggl_url = <<~HEREDOC
+        https://www.toggl.com/reports/api/v2/details?billable=both&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+      HEREDOC
+
       copy_config_file
 
       ::FileUtils.touch tmp_path(link_config_file)
@@ -397,6 +432,24 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     end
 
     it 'should round the value' do
+      toggl_url = <<~HEREDOC
+        https://www.toggl.com/reports/api/v2/details?billable=both&project_ids=2222,%203333&rounding=on&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+      HEREDOC
+
+      toggl_time_entries_body = <<~HEREDOC
+        {
+          "data": [
+            {
+              "id": 4444,
+              "start": "2020-12-10",
+              "dur": 10800000,
+              "description": "Test time entry",
+              "billable": false
+            }
+          ]
+        }
+      HEREDOC
+
       copy_config_file
 
       ::FileUtils.touch tmp_path(link_config_file)
@@ -426,8 +479,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test time entry', '3.50h'],
-            ['Total:', '', '3.50h']
+            ['2020-12-10', 'Test time entry', '3h'],
+            ['Total:', '', '3h']
           ]
         )
         .and_call_original

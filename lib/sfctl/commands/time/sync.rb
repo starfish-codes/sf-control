@@ -1,5 +1,4 @@
 require 'date'
-require 'rounding'
 require 'pastel'
 require 'tty-prompt'
 require 'tty-spinner'
@@ -12,8 +11,6 @@ module Sfctl
   module Commands
     class Time
       class Sync < Sfctl::Command
-        ROUND_VALUE = 25
-
         def initialize(options)
           @options = options
           @pastel = Pastel.new(enabled: !@options['no-color'])
@@ -100,7 +97,7 @@ module Sfctl
 
           print_report_contains_data(output, next_report) && return if touchy?(next_report)
 
-          uploading_to_starfish(output, assignment, time_entries, connection)
+          uploading_to_starfish(output, assignment, time_entries)
         end
 
         def touchy?(next_report)
@@ -140,11 +137,10 @@ module Sfctl
           spinner.auto_spin
 
           time_entries = get_toggle_time_entries(next_report, connection)
-          time_entries = filter_by_billable!(time_entries, connection)
 
           spinner.success(@pastel.green('Done'))
 
-          table = TTY::Table.new %w[Date Comment Time], time_entries_table_rows(time_entries, connection)
+          table = TTY::Table.new %w[Date Comment Time], time_entries_table_rows(time_entries)
           output.puts
           output.print table.render(:unicode, padding: [0, 1], alignments: %i[left left right])
           output.puts
@@ -153,15 +149,15 @@ module Sfctl
           time_entries
         end
 
-        def time_entries_table_rows(time_entries, connection)
+        def time_entries_table_rows(time_entries)
           rows = time_entries.map do |te|
             [
               Date.parse(te['start']).to_s,
               te['description'],
-              "#{humanize_duration(te['dur'], connection)}h"
+              "#{humanize_duration(te['dur'])}h"
             ]
           end
-          rows.push(['Total:', '', "#{humanize_duration(time_entries.map { |te| te['dur'] }.sum, connection)}h"])
+          rows.push(['Total:', '', "#{humanize_duration(time_entries.map { |te| te['dur'] }.sum)}h"])
           rows
         end
 
@@ -173,23 +169,14 @@ module Sfctl
           time_entries['data']
         end
 
-        def filter_by_billable!(time_entries, connection)
-          case connection['billable']
-          when 'yes'
-            time_entries.delete_if { |te| te['billable'] == false }
-          when 'no'
-            time_entries.delete_if { |te| te['billable'] == true }
-          else
-            time_entries
-          end
-        end
-
         def time_entries_params(next_report, connection)
           start_date = Date.parse("#{next_report['year']}-#{next_report['month']}-01")
           end_date = start_date.next_month.prev_day
           params = {
             workspace_id: connection['workspace_id'],
             project_ids: connection['project_ids'],
+            billable: connection['billable'],
+            rounding: connection['rounding'],
             since: start_date.to_s,
             until: end_date.to_s
           }
@@ -197,38 +184,37 @@ module Sfctl
           params
         end
 
-        def humanize_duration(milliseconds, connection)
+        def humanize_duration(milliseconds)
           seconds = milliseconds / 1000
           minutes = seconds / 60
           int = (minutes / 60).ceil
           dec = minutes % 60
           amount = (dec * 100) / 60
-          if connection['rounding'] == 'on'
-            amount = amount.round_to(ROUND_VALUE)
-            if amount == 100
-              amount = 0
-              int += 1
-            end
-          end
-          amount = dec.zero? ? '' : ".#{amount}"
+          amount = if dec.zero?
+                     ''
+                   elsif amount.to_s.length == 1
+                     ".0#{amount}"
+                   else
+                     ".#{amount}"
+                   end
           "#{int}#{amount}"
         end
 
-        def assignment_items(time_entries, connection)
+        def assignment_items(time_entries)
           time_entries.map do |te|
             {
-              time: humanize_duration(te['dur'], connection).to_f,
+              time: humanize_duration(te['dur']).to_f,
               date: Date.parse(te['start']).to_s,
               comment: te['description']
             }
           end
         end
 
-        def uploading_to_starfish(output, assignment, time_entries, connection)
+        def uploading_to_starfish(output, assignment, time_entries)
           spinner = TTY::Spinner.new('Uploading to starfish.team: [:spinner]', format: :dots)
           spinner.auto_spin
           success = Starfish.update_next_report(
-            @options['starfish-host'], access_token, assignment['id'], assignment_items(time_entries, connection)
+            @options['starfish-host'], access_token, assignment['id'], assignment_items(time_entries)
           )
           print_upload_results(output, success, spinner)
         end
