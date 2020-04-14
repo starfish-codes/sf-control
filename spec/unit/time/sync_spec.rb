@@ -15,7 +15,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   let(:toggl_token) { 'test_toggl_token' }
   let(:toggl_url) do
     <<~HEREDOC
-      https://www.toggl.com/api/v8/time_entries?end_date=2020-12-31T23:59:59%2B00:00&start_date=2020-12-01T00:00:00%2B00:00&wid=11111
+      https://www.toggl.com/reports/api/v2/details?project_ids=2222,%203333&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
     HEREDOC
   end
   let(:assignment_name) { 'Test assignment' }
@@ -48,22 +48,25 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   end
   let(:toggl_time_entries_body) do
     <<~HEREDOC
-      [
-        {
-          "id": 4444,
-          "start": "2020-12-10",
-          "duration": 10800,
-          "description": "Test non-billable time entry",
-          "billable": false
-        },
-        {
-          "id": 5555,
-          "start": "2020-12-10",
-          "duration": 9000,
-          "description": "Test billable time entry",
-          "billable": true
-        }
-      ]
+      {
+        "data": [
+          {
+            "id": 4444,
+            "start": "2020-12-10",
+            "dur": 10800000,
+            "description": "Test non-billable time entry",
+            "billable": false
+          },
+          {
+            "id": 5555,
+            "start": "2020-12-10",
+            "dur": 9000000,
+            "description": "Test billable time entry",
+            "billable": true
+          }
+        ]
+      }
+
     HEREDOC
   end
   let(:table_headers) { %w[Date Comment Time] }
@@ -353,15 +356,17 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   context 'rounding on/off' do
     let(:toggl_time_entries_body) do
       <<~HEREDOC
-        [
-          {
-            "id": 4444,
-            "start": "2020-12-10",
-            "duration": 12500,
-            "description": "Test time entry",
-            "billable": true
-          }
-        ]
+        {
+          "data": [
+            {
+              "id": 4444,
+              "start": "2020-12-10",
+              "dur": 12500000,
+              "description": "Test time entry",
+              "billable": true
+            }
+          ]
+        }
       HEREDOC
     end
 

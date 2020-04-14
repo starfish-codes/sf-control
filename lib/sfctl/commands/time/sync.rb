@@ -30,6 +30,7 @@ module Sfctl
 
           sync_assignments(output, assignments_to_sync)
         rescue ThreadError, JSON::ParserError
+          output.puts
           output.puts @pastel.red('Something went wrong.')
         end
 
@@ -157,25 +158,19 @@ module Sfctl
             [
               Date.parse(te['start']).to_s,
               te['description'],
-              "#{humanize_duration(te['duration'], connection)}h"
+              "#{humanize_duration(te['dur'], connection)}h"
             ]
           end
-          rows.push(['Total:', '', "#{humanize_duration(time_entries.map { |te| te['duration'] }.sum, connection)}h"])
+          rows.push(['Total:', '', "#{humanize_duration(time_entries.map { |te| te['dur'] }.sum, connection)}h"])
           rows
         end
 
-        def get_toggle_time_entries(next_report, connection) # rubocop:disable Metrics/AbcSize
+        def get_toggle_time_entries(next_report, connection)
           _success, time_entries = Toggl.time_entries(
             read_link_config['providers'][TOGGL_PROVIDER]['access_token'], time_entries_params(next_report, connection)
           )
-          unless connection['task_ids'].empty?
-            time_entries.delete_if { |te| !connection['task_ids'].include?(te['id'].to_s) }
-          end
-          unless connection['project_ids'].empty?
-            time_entries.delete_if { |te| !connection['project_ids'].include?(te['pid'].to_s) }
-          end
 
-          time_entries
+          time_entries['data']
         end
 
         def filter_by_billable!(time_entries, connection)
@@ -192,14 +187,18 @@ module Sfctl
         def time_entries_params(next_report, connection)
           start_date = Date.parse("#{next_report['year']}-#{next_report['month']}-01")
           end_date = start_date.next_month.prev_day
-          {
-            wid: connection['workspace_id'],
-            start_date: start_date.to_datetime.to_s,
-            end_date: "#{end_date}T23:59:59+00:00"
+          params = {
+            workspace_id: connection['workspace_id'],
+            project_ids: connection['project_ids'],
+            since: start_date.to_s,
+            until: end_date.to_s
           }
+          params[:task_ids] = connection['task_ids'] if connection['task_ids'].length.positive?
+          params
         end
 
-        def humanize_duration(seconds, connection)
+        def humanize_duration(milliseconds, connection)
+          seconds = milliseconds / 1000
           minutes = seconds / 60
           int = (minutes / 60).ceil
           dec = minutes % 60
@@ -218,7 +217,7 @@ module Sfctl
         def assignment_items(time_entries, connection)
           time_entries.map do |te|
             {
-              time: humanize_duration(te['duration'], connection).to_f,
+              time: humanize_duration(te['dur'], connection).to_f,
               date: Date.parse(te['start']).to_s,
               comment: te['description']
             }

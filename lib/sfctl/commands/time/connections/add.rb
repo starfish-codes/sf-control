@@ -5,7 +5,6 @@ require 'tty-prompt'
 require_relative '../../../command'
 require_relative '../../../starfish'
 require_relative '../../../toggl'
-require 'pry'
 
 module Sfctl
   module Commands
@@ -111,20 +110,25 @@ module Sfctl
               end
             end
 
-            time_entries_params = {
-              wid: workspace_id,
-              start_date: "#{Date.today - 90}T00:00:00+00:00",
-              end_date: "#{Date.today}T23:59:59+00:00"
-            }
             spinner.resume
-            _success, time_entries = Toggl.time_entries(toggl_token, time_entries_params)
-            time_entries.delete_if { |te| !project_ids.include?(te['pid']) } unless project_ids.empty?
-            spinner.success
+            tasks_objs = []
+            project_ids.each do |pj_id|
+              _success, tasks = Toggl.project_tasks(toggl_token, pj_id)
+              tasks_objs << tasks
+            end
+            tasks_objs.flatten!
+            tasks_objs.compact!
             output.puts
-            time_entries_ids = @prompt.multi_select('Please select Tasks(by last 3 months):') do |menu|
-              time_entries.each do |time_entry|
-                menu.choice time_entry['description'], time_entry['id']
+            spinner.success
+            tasks_ids = []
+            if tasks_objs.length.positive?
+              tasks_ids = @prompt.multi_select('Please select Tasks(by last 3 months):') do |menu|
+                tasks_objs.each do |to|
+                  menu.choice to['name'], to['id']
+                end
               end
+            else
+              output.puts @pastel.yellow("You don't have tasks. Continue...")
             end
 
             billable = @prompt.select('Billable?', %w[yes no both])
@@ -136,7 +140,7 @@ module Sfctl
             config.set("connections.#{assignment_id}.provider", value: TOGGL_PROVIDER)
             config.set("connections.#{assignment_id}.workspace_id", value: workspace_id.to_s)
             config.set("connections.#{assignment_id}.project_ids", value: project_ids.join(', '))
-            config.set("connections.#{assignment_id}.task_ids", value: time_entries_ids.join(', '))
+            config.set("connections.#{assignment_id}.task_ids", value: tasks_ids.join(', '))
             config.set("connections.#{assignment_id}.billable", value: billable)
             config.set("connections.#{assignment_id}.rounding", value: rounding)
 
