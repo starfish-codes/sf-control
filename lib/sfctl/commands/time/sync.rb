@@ -150,7 +150,7 @@ module Sfctl
         end
 
         def time_entries_table_rows(time_entries)
-          rows = time_entries.map do |te|
+          rows = time_entries.sort_by { |te| te['start'] }.map do |te|
             [
               Date.parse(te['start']).to_s,
               te['description'],
