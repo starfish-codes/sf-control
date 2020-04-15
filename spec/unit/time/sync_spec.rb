@@ -49,6 +49,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   let(:toggl_time_entries_body) do
     <<~HEREDOC
       {
+        "total_grand": 19800000,
         "data": [
           {
             "id": 4444,
@@ -245,6 +246,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     it 'should print only billable time entries' do
       toggl_time_entries_body = <<~HEREDOC
         {
+          "total_grand": 9000000,
           "data": [
             {
               "id": 5555,
@@ -289,6 +291,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
       toggl_time_entries_body = <<~HEREDOC
         {
+          "total_grand": 10800000,
           "data": [
             {
               "id": 4444,
@@ -392,6 +395,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     let(:toggl_time_entries_body) do
       <<~HEREDOC
         {
+          "total_grand": 12500000,
           "data": [
             {
               "id": 4444,
@@ -438,6 +442,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
       toggl_time_entries_body = <<~HEREDOC
         {
+          "total_grand": 10800000,
           "data": [
             {
               "id": 4444,

@@ -146,27 +146,27 @@ module Sfctl
           output.puts
           output.puts
 
-          time_entries
+          time_entries['data']
         end
 
         def time_entries_table_rows(time_entries)
-          rows = time_entries.sort_by { |te| te['start'] }.map do |te|
+          rows = time_entries['data'].sort_by { |te| te['start'] }.map do |te|
             [
               Date.parse(te['start']).to_s,
               te['description'],
               "#{humanize_duration(te['dur'])}h"
             ]
           end
-          rows.push(['Total:', '', "#{humanize_duration(time_entries.map { |te| te['dur'] }.sum)}h"])
+          rows.push(['Total:', '', "#{humanize_duration(time_entries['total_grand'])}h"])
           rows
         end
 
         def get_toggle_time_entries(next_report, connection)
-          _success, time_entries = Toggl.time_entries(
+          _success, data = Toggl.time_entries(
             read_link_config['providers'][TOGGL_PROVIDER]['access_token'], time_entries_params(next_report, connection)
           )
 
-          time_entries['data']
+          data
         end
 
         def time_entries_params(next_report, connection)
@@ -185,6 +185,8 @@ module Sfctl
         end
 
         def humanize_duration(milliseconds)
+          return '0' if milliseconds.nil?
+
           seconds = milliseconds / 1000
           minutes = seconds / 60
           int = (minutes / 60).ceil
