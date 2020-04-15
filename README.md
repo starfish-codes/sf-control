@@ -21,13 +21,11 @@ Flags:
 
 ## Installing `sfctl`
 
-### Using a Package Manager (Preferred)
+### Using Ruby Gems (Preferred)
 
-More to come.
-
-### Git
-
-More to come.
+```
+gem install sfctl
+```
 
 ## Authentication
 
@@ -109,8 +107,6 @@ We will provide a couple of integrations but also open up for plugins later on t
 As of today we support:
 
 - Toggl
-- Harvest
-- Clockify
 
 Another advantage of this approach is, that you think of any automation ⚒ you like to support your processes.
 
