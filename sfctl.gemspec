@@ -40,8 +40,8 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'tty-reader', '~> 0.7.0'
   spec.add_runtime_dependency 'tty-screen', '~> 0.7.1'
   spec.add_runtime_dependency 'tty-spinner', '~> 0.9.3'
-  spec.add_runtime_dependency 'tty-table', '~> 0.21.0'
-  spec.add_runtime_dependency 'tty-tree', '~> 0.11.0'
+  spec.add_runtime_dependency 'tty-table', '~> 0.11.0'
+  spec.add_runtime_dependency 'tty-tree', '~> 0.4.0'
   spec.add_runtime_dependency 'tty-which', '~> 0.4.2'
 
   # Specify which files should be added to the gem when it is released.
