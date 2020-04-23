@@ -47,6 +47,9 @@ module Sfctl
 
         def assignments_to_sync
           assignments = assignments_from_connections
+
+          return assignments if @options['all']
+
           assignment_id = select_assignment(assignments)
 
           return assignments if assignment_id == 'all'
