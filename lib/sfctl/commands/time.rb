@@ -12,6 +12,8 @@ module Sfctl
                               desc: 'Check the data first respectively prevent data from being overwritten'
       method_option :touchy, aliases: '-touchy', type: :boolean, default: false,
                              desc: 'The synchronizsation will be skipped if there is preexisting data.'
+      method_option :all, aliases: '-all', type: :boolean, default: false,
+                          desc: 'Skip selecting assignments and sync all of them.'
       long_desc <<~HEREDOC
         It will gets for each assignment the next reporting segment from starfish.team
         and loads the corresponding time reports from the provider.

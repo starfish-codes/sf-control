@@ -147,6 +147,21 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     expect(output.string).to include 'Dry run enabled. Skipping upload to starfish.team.'
   end
 
+  it 'should skip selecting an assignment with option "all"' do
+    copy_config_file
+    copy_link_config_file
+
+    stub_request(:get, next_report_url).to_return(body: next_report_body, status: 200)
+    stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 200)
+
+    expect_any_instance_of(TTY::Prompt).not_to receive(:select).with('Which assignment do you want to sync?')
+    expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+    options['all'] = true
+    options['dry_run'] = true
+    described_class.new(options).execute(output: output)
+  end
+
   it 'should return a message that report contains data' do
     copy_config_file
     copy_link_config_file
