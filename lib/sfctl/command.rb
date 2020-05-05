@@ -13,8 +13,10 @@ module Sfctl
     LINK_CONFIG_PATH = "#{Dir.pwd}/#{LINK_CONFIG_FILENAME}"
 
     TOGGL_PROVIDER = 'toggl'
+    HARVEST_PROVIDER = 'harvest'
     PROVIDERS_LIST = [
-      TOGGL_PROVIDER
+      TOGGL_PROVIDER,
+      HARVEST_PROVIDER
     ].freeze
 
     def_delegators :command, :run

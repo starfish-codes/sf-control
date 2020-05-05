@@ -14,6 +14,8 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     }
   end
   let(:toggl_provider) { 'toggl' }
+  let(:harvest_provider) { 'harvest' }
+  let(:providers_list) { [toggl_provider, harvest_provider] }
   let(:assignments_url) { "#{options['starfish-host']}/api/v1/assignments" }
   let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
   let(:workspace_id) { 'test_workspace_id' }
@@ -110,7 +112,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
     stub_request(:get, toggl_projects_url).to_return(body: '{}', status: 200)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
       .and_return(toggl_provider)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
@@ -154,7 +156,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
     stub_request(:get, toggl_tasks_url).to_return(body: '[]', status: 200)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
       .and_return(toggl_provider)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
@@ -213,7 +215,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
     stub_request(:get, toggl_tasks_url).to_return(body: '{}', status: 200)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
       .and_return(toggl_provider)
 
     expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')

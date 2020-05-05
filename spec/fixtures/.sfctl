@@ -2,4 +2,7 @@
 access_token: correctToken
 providers:
   toggl:
-    access_token: 'test_access_token'
+    access_token: 'test_toggl_access_token'
+  harvest:
+    account_id: 'test_harvest_account_id'
+    access_token: 'test_harvest_access_token'

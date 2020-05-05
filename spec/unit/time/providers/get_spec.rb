@@ -8,6 +8,7 @@ RSpec.describe Sfctl::Commands::Time::Providers::Get, type: :unit do
     { 'no-color' => true }
   end
   let(:toggl_provider) { 'toggl' }
+  let(:harvest_provider) { 'harvest' }
 
   before do
     stub_const('Sfctl::Command::CONFIG_PATH', tmp_path(config_file))
@@ -20,15 +21,17 @@ RSpec.describe Sfctl::Commands::Time::Providers::Get, type: :unit do
   end
 
   it 'should get providers' do
-    access_token = 'test_access_token'
-
     config_path = fixtures_path(config_file)
     ::FileUtils.cp(config_path, tmp_path(config_file))
 
     described_class.new(options).execute(output: output)
 
     expect(output.string).to include toggl_provider
-    expect(output.string).to include access_token
+    expect(output.string).to include 'test_toggl_access_token'
+
+    expect(output.string).to include harvest_provider
+    expect(output.string).to include 'test_harvest_account_id'
+    expect(output.string).to include 'test_harvest_access_token'
   end
 
   it 'should return a message that provider is not set' do
