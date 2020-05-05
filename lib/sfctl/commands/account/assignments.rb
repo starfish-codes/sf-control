@@ -1,7 +1,7 @@
 require 'pastel'
 require 'tty-table'
 require_relative '../../command'
-require_relative '../../starfish'
+require_relative '../../starfish/client'
 
 module Sfctl
   module Commands
@@ -15,7 +15,7 @@ module Sfctl
         def execute(output: $stdout)
           return unless config_present?(output)
 
-          success, data = Starfish.account_assignments(@options['starfish-host'], @options['all'], access_token)
+          success, data = Starfish::Client.account_assignments(@options['starfish-host'], @options['all'], access_token)
 
           unless success
             output.puts @pastel.red('Something went wrong. Unable to fetch assignments')

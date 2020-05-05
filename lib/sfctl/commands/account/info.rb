@@ -1,7 +1,7 @@
 require 'pastel'
 require 'tty-table'
 require_relative '../../command'
-require_relative '../../starfish'
+require_relative '../../starfish/client'
 
 module Sfctl
   module Commands
@@ -15,7 +15,7 @@ module Sfctl
         def execute(output: $stdout)
           return unless config_present?(output)
 
-          success, info = Starfish.account_info(@options['starfish-host'], access_token)
+          success, info = Starfish::Client.account_info(@options['starfish-host'], access_token)
 
           unless success
             output.puts @pastel.red('Something went wrong. Unable to fetch account info')

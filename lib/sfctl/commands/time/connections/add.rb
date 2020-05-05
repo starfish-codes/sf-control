@@ -3,9 +3,9 @@ require 'pastel'
 require 'tty-spinner'
 require 'tty-prompt'
 require_relative '../../../command'
-require_relative '../../../starfish'
-require_relative '../../../toggl'
-require_relative '../../../harvest'
+require_relative '../../../starfish/client'
+require_relative '../../../toggl/client'
+require_relative '../../../harvest/client'
 
 module Sfctl
   module Commands
@@ -23,7 +23,7 @@ module Sfctl
 
             ltoken = access_token
             config.delete(:access_token)
-            success, data = Starfish.account_assignments(@options['starfish-host'], @options['all'], ltoken)
+            success, data = Starfish::Client.account_assignments(@options['starfish-host'], @options['all'], ltoken)
             unless success
               output.puts @pastel.red('Something went wrong. Unable to fetch assignments')
               return
@@ -97,7 +97,7 @@ module Sfctl
             toggl_token = read_link_config['providers'][TOGGL_PROVIDER]['access_token']
 
             spinner.auto_spin
-            _success, workspaces = Toggl.workspaces(toggl_token)
+            _success, workspaces = Toggl::Client.workspaces(toggl_token)
             spinner.pause
             output.puts
             workspace = @prompt.select('Please select Workspace:') do |menu|
@@ -108,7 +108,7 @@ module Sfctl
             workspace_id = workspace['id']
 
             spinner.resume
-            _success, projects = Toggl.workspace_projects(toggl_token, workspace_id)
+            _success, projects = Toggl::Client.workspace_projects(toggl_token, workspace_id)
 
             if projects.nil? || projects.empty?
               spinner.stop
@@ -128,7 +128,7 @@ module Sfctl
             spinner.resume
             tasks_objs = []
             project_ids.each do |pj_id|
-              _success, tasks = Toggl.project_tasks(toggl_token, pj_id)
+              _success, tasks = Toggl::Client.project_tasks(toggl_token, pj_id)
               tasks_objs << tasks
             end
             tasks_objs.flatten!
@@ -170,7 +170,7 @@ module Sfctl
             harvest_token = read_link_config['providers'][HARVEST_PROVIDER]['access_token']
 
             spinner.auto_spin
-            _success, projects = Harvest.projects(harvest_account_id, harvest_token)
+            _success, projects = Harvest::Client.projects(harvest_account_id, harvest_token)
 
             if projects.nil? || projects.empty?
               spinner.stop
@@ -189,7 +189,7 @@ module Sfctl
             project_id = project['id']
 
             spinner.resume
-            _success, tasks = Harvest.tasks(harvest_account_id, harvest_token)
+            _success, tasks = Harvest::Client.tasks(harvest_account_id, harvest_token)
 
             if tasks.nil? || tasks.empty?
               spinner.stop

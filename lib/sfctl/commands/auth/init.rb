@@ -1,5 +1,5 @@
 require_relative '../../command'
-require_relative '../../starfish'
+require_relative '../../starfish/client'
 require 'pastel'
 require 'tty-prompt'
 require 'tty-spinner'
@@ -23,7 +23,7 @@ module Sfctl
         private
 
         def token_valid?(access_token)
-          Starfish.check_authorization(@options['starfish-host'], access_token)
+          Starfish::Client.check_authorization(@options['starfish-host'], access_token)
         end
 
         def token_accepted_message

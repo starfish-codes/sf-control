@@ -4,8 +4,9 @@ require 'tty-prompt'
 require 'tty-spinner'
 require 'tty-table'
 require_relative '../../command'
-require_relative '../../starfish'
-require_relative '../../toggl'
+require_relative '../../starfish/client'
+require_relative '../../toggl/sync'
+require_relative '../../harvest/sync'
 
 module Sfctl
   module Commands
@@ -80,27 +81,42 @@ module Sfctl
           end
         end
 
-        def sync(output, assignment, connection)
-          case connection['provider']
-          when TOGGL_PROVIDER
-            sync_with_toggl!(output, assignment, connection)
-          end
-        end
-
-        def sync_with_toggl!(output, assignment, connection) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+        def sync(output, assignment, connection) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
           output.puts "Synchronizing: #{@pastel.cyan("[#{assignment['name']} / #{assignment['service']}]")}"
 
-          success, next_report = Starfish.next_report(@options['starfish-host'], access_token, assignment['id'])
+          success, next_report = Starfish::Client.next_report(@options['starfish-host'], access_token, assignment['id'])
 
           print_no_next_reporting_segment(output) && return if !success || next_report.empty?
 
-          time_entries = load_data_from_toggl(output, next_report, connection)
+          time_entries = load_time_entries(output, next_report, connection)
 
           print_dry_run_enabled(output) && return if @options['dry_run']
 
           print_report_contains_data(output, next_report) && return if touchy?(next_report)
 
-          uploading_to_starfish(output, assignment, time_entries)
+          uploading_to_starfish(output, assignment, time_entries, connection)
+        end
+
+        def report_interval(record)
+          start_date = Date.parse("#{record['year']}-#{record['month']}-01")
+          end_date = start_date.next_month.prev_day
+          [start_date, end_date]
+        end
+
+        def load_time_entries(output, next_report, connection)
+          output.puts "Next Report:   #{@pastel.cyan(report_name(next_report))}"
+          next_report_interval = report_interval(next_report)
+
+          case connection['provider']
+          when TOGGL_PROVIDER
+            Toggl::Sync.load_data(
+              output, connection, read_link_config['providers'][TOGGL_PROVIDER], @pastel, next_report_interval
+            )
+          when HARVEST_PROVIDER
+            Harvest::Sync.load_data(
+              output, connection, read_link_config['providers'][HARVEST_PROVIDER], @pastel, next_report_interval
+            )
+          end
         end
 
         def touchy?(next_report)
@@ -133,93 +149,21 @@ module Sfctl
           true
         end
 
-        def load_data_from_toggl(output, next_report, connection)
-          output.puts "Next Report:   #{@pastel.cyan(report_name(next_report))}"
-
-          spinner = TTY::Spinner.new("Loaded data from #{TOGGL_PROVIDER}: [:spinner]", format: :dots)
-          spinner.auto_spin
-
-          time_entries = get_toggle_time_entries(next_report, connection)
-
-          spinner.success(@pastel.green('Done'))
-
-          table = TTY::Table.new %w[Date Comment Time], time_entries_table_rows(time_entries)
-          output.puts
-          output.print table.render(:unicode, padding: [0, 1], alignments: %i[left left right])
-          output.puts
-          output.puts
-
-          time_entries['data']
-        end
-
-        def time_entries_table_rows(time_entries)
-          rows = time_entries['data'].sort_by { |te| te['start'] }.map do |te|
-            [
-              Date.parse(te['start']).to_s,
-              te['description'],
-              "#{humanize_duration(te['dur'])}h"
-            ]
-          end
-          rows.push(['Total:', '', "#{humanize_duration(time_entries['total_grand'])}h"])
-          rows
-        end
-
-        def get_toggle_time_entries(next_report, connection)
-          _success, data = Toggl.time_entries(
-            read_link_config['providers'][TOGGL_PROVIDER]['access_token'], time_entries_params(next_report, connection)
-          )
-
-          data
-        end
-
-        def time_entries_params(next_report, connection)
-          start_date = Date.parse("#{next_report['year']}-#{next_report['month']}-01")
-          end_date = start_date.next_month.prev_day
-          params = {
-            workspace_id: connection['workspace_id'],
-            project_ids: connection['project_ids'],
-            billable: connection['billable'],
-            rounding: connection['rounding'],
-            since: start_date.to_s,
-            until: end_date.to_s
-          }
-          params[:task_ids] = connection['task_ids'] if connection['task_ids'].length.positive?
-          params
-        end
-
-        def humanize_duration(milliseconds)
-          return '0' if milliseconds.nil?
-
-          seconds = milliseconds / 1000
-          minutes = seconds / 60
-          int = (minutes / 60).ceil
-          dec = minutes % 60
-          amount = (dec * 100) / 60
-          amount = if dec.zero?
-                     ''
-                   elsif amount.to_s.length == 1
-                     ".0#{amount}"
-                   else
-                     ".#{amount}"
-                   end
-          "#{int}#{amount}"
-        end
-
-        def assignment_items(time_entries)
-          time_entries.map do |te|
-            {
-              time: humanize_duration(te['dur']).to_f,
-              date: Date.parse(te['start']).to_s,
-              comment: te['description']
-            }
+        def assignment_items(time_entries, connection)
+          case connection['provider']
+          when TOGGL_PROVIDER
+            Toggl::Sync.assignment_items(time_entries)
+          when HARVEST_PROVIDER
+            Harvest::Sync.assignment_items(time_entries, connection)
           end
         end
 
-        def uploading_to_starfish(output, assignment, time_entries)
+        def uploading_to_starfish(output, assignment, time_entries, connection)
           spinner = TTY::Spinner.new('Uploading to starfish.team: [:spinner]', format: :dots)
           spinner.auto_spin
-          success = Starfish.update_next_report(
-            @options['starfish-host'], access_token, assignment['id'], assignment_items(time_entries)
+
+          success = Starfish::Client.update_next_report(
+            @options['starfish-host'], access_token, assignment['id'], assignment_items(time_entries, connection)
           )
           print_upload_results(output, success, spinner)
         end
