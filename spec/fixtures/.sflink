@@ -9,3 +9,11 @@ connections:
     task_ids: '4444, 5555, 6666, 7777'
     billable: 'yes'
     rounding: 'off'
+  '2020':
+    name: 'Test assignment 2'
+    service: 'Test service 2'
+    provider: harvest
+    project_id: '1111111'
+    task_id: '2222222'
+    billable: 'yes'
+    rounding: 'off'

@@ -19,5 +19,19 @@ module Sfctl
         builder.adapter :net_http
       end
     end
+
+    def self.parsed_response(response, key)
+      [response.status == 200, JSON.parse(response.body)[key]]
+    end
+
+    def self.projects(account_id, token)
+      response = conn(account_id, token).get('projects')
+      parsed_response(response, 'projects')
+    end
+
+    def self.tasks(account_id, token)
+      response = conn(account_id, token).get('tasks')
+      parsed_response(response, 'tasks')
+    end
   end
 end
