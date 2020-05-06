@@ -29,23 +29,41 @@ module Sfctl
 
           def print_connections(output)
             config.fetch(:connections).each_key do |assignment_id|
+              print_header!(output, assignment_id)
+
               case config.fetch(:connections, assignment_id, :provider)
               when TOGGL_PROVIDER
                 print_toggl_connection!(output, assignment_id)
+              when HARVEST_PROVIDER
+                print_harvest_connection!(output, assignment_id)
               end
+
+              print_footer!(output, assignment_id)
             end
           end
 
-          def print_toggl_connection!(output, assignment_id) # rubocop:disable Metrics/AbcSize
+          def print_header!(output, assignment_id)
             output.puts "Connection: #{config.fetch(:connections, assignment_id, :name)}"
             output.puts "  service: #{config.fetch(:connections, assignment_id, :service)}"
+          end
+
+          def print_footer!(output, assignment_id)
+            output.puts "  billable: #{config.fetch(:connections, assignment_id, :billable)}"
+            output.puts "  rounding: #{config.fetch(:connections, assignment_id, :rounding)}"
+            output.puts
+          end
+
+          def print_toggl_connection!(output, assignment_id)
             output.puts "  provider: #{TOGGL_PROVIDER}"
             output.puts "  workspace_id: #{config.fetch(:connections, assignment_id, :workspace_id)}"
             output.puts "  project_ids: #{config.fetch(:connections, assignment_id, :project_ids)}"
             output.puts "  task_ids: #{config.fetch(:connections, assignment_id, :task_ids)}"
-            output.puts "  billable: #{config.fetch(:connections, assignment_id, :billable)}"
-            output.puts "  rounding: #{config.fetch(:connections, assignment_id, :rounding)}"
-            output.puts
+          end
+
+          def print_harvest_connection!(output, assignment_id)
+            output.puts "  provider: #{HARVEST_PROVIDER}"
+            output.puts "  project_id: #{config.fetch(:connections, assignment_id, :project_id)}"
+            output.puts "  task_id: #{config.fetch(:connections, assignment_id, :task_id)}"
           end
         end
       end

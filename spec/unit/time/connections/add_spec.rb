@@ -14,14 +14,9 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     }
   end
   let(:toggl_provider) { 'toggl' }
+  let(:harvest_provider) { 'harvest' }
+  let(:providers_list) { [toggl_provider, harvest_provider] }
   let(:assignments_url) { "#{options['starfish-host']}/api/v1/assignments" }
-  let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
-  let(:workspace_id) { 'test_workspace_id' }
-  let(:toggl_projects_url) { "https://www.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
-  let(:copy_config_files_to_tmp) do
-    ::FileUtils.cp(config_path, tmp_path(config_file))
-    ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
-  end
   let(:assignment_id) { 1010 }
   let(:assignment_name) { 'Test assignment' }
   let(:assignment_service) { 'Test service' }
@@ -41,6 +36,10 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
         ]
       }
     HEREDOC
+  end
+  let(:copy_config_files_to_tmp) do
+    ::FileUtils.cp(config_path, tmp_path(config_file))
+    ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
   end
 
   before do
@@ -84,175 +83,251 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
     expect(output.string).to include 'All assignments already added.'
   end
 
-  it 'should return an error if not able to fetch toggl projects' do
-    copy_config_files_to_tmp
+  context 'toggl' do
+    let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
+    let(:workspace_id) { 'test_workspace_id' }
+    let(:toggl_projects_url) { "https://www.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
+    let(:assignment_id) { '1012' }
+    let(:assignment_name) { 'Test assignment 3' }
+    let(:assignment_service) { 'Test service 3' }
+    let(:assignments_response_body) do
+      <<~HEREDOC
+        {
+          "assignments": [
+            {
+              "id": #{assignment_id},
+              "name": "#{assignment_name}",
+              "service": "#{assignment_service}",
+              "start_date": "2020-01-01",
+              "end_date": "2020-05-15",
+              "budget": 40,
+              "unit": "hours"
+            }
+          ]
+        }
+      HEREDOC
+    end
 
-    assignment_id = '1012'
-    assignment_name = 'Test assignment 2'
-    assignment_service = 'Test service 2'
-    assignments_response_body = <<~HEREDOC
-      {
-        "assignments": [
-          {
-            "id": #{assignment_id},
-            "name": "#{assignment_name}",
-            "service": "#{assignment_service}",
-            "start_date": "2020-01-01",
-            "end_date": "2020-05-15",
-            "budget": 40,
-            "unit": "hours"
-          }
-        ]
-      }
-    HEREDOC
+    before do
+      copy_config_files_to_tmp
+    end
 
-    stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
-    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
-    stub_request(:get, toggl_projects_url).to_return(body: '{}', status: 200)
+    it 'should return an error if not able to fetch toggl projects' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+      stub_request(:get, toggl_projects_url).to_return(body: '{}', status: 200)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
-      .and_return(toggl_provider)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(toggl_provider)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
-      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
-    workspace = { 'id' => workspace_id, name: 'Test workspace' }
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+      workspace = { 'id' => workspace_id, name: 'Test workspace' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
 
-    described_class.new(options).execute(output: output)
+      described_class.new(options).execute(output: output)
 
-    error_message = "There is no projects. Please visit #{toggl_provider} and create them before continue."
-    expect(output.string).to include error_message
+      error_message = "There is no projects. Please visit #{toggl_provider} and create them before continue."
+      expect(output.string).to include error_message
+    end
+
+    it 'should return a message that there is no tasks' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+      stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
+      selected_project_id = 'project_id1'
+      toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+      stub_request(:get, toggl_tasks_url).to_return(body: '[]', status: 200)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(toggl_provider)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+
+      workspace = { 'id' => workspace_id, name: 'Test workspace' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+
+      project_ids = [selected_project_id]
+      expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
+        .and_return(project_ids)
+
+      expect_any_instance_of(TTY::Prompt).not_to receive(:multi_select).with('Please select Tasks(by last 3 months):')
+
+      billable = 'yes'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Billable?', %w[yes no both])
+        .and_return(billable)
+
+      rounding = 'on'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Rounding?', %w[on off])
+        .and_return(rounding)
+
+      described_class.new(options).execute(output: output)
+
+      expect(output.string).to include "You don't have tasks. Continue..."
+    end
+
+    it 'should add new connection' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
+      stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
+      selected_project_id = 'project_id1'
+      toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+      stub_request(:get, toggl_tasks_url).to_return(body: '{}', status: 200)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(toggl_provider)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+
+      workspace = { 'id' => workspace_id, name: 'Test workspace' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+
+      project_ids = [selected_project_id]
+      expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
+        .and_return(project_ids)
+
+      task_ids = %w[task_ids1 task_ids2 task_ids3 task_ids4]
+      expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Tasks(by last 3 months):')
+        .and_return(task_ids)
+
+      billable = 'yes'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Billable?', %w[yes no both])
+        .and_return(billable)
+
+      rounding = 'on'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Rounding?', %w[on off])
+        .and_return(rounding)
+
+      described_class.new(options).execute(output: output)
+
+      expect(output.string).to include 'Connection successfully added.'
+
+      file_data = File.read(tmp_path(link_config_file))
+      expect(file_data).to include 'connections:'
+      expect(file_data).to include assignment_name
+      expect(file_data).to include assignment_service
+      expect(file_data).to include toggl_provider
+      expect(file_data).to include workspace_id
+      expect(file_data).to include project_ids.join(', ')
+      expect(file_data).to include task_ids.join(', ')
+      expect(file_data).to include billable
+      expect(file_data).to include rounding
+    end
   end
 
-  it 'should return a message that there is no tasks' do
-    copy_config_files_to_tmp
+  context 'harvest' do
+    let(:harvest_projects_url) { 'https://api.harvestapp.com/api/v2/projects' }
+    let(:harvest_tasks_url) { 'https://api.harvestapp.com/api/v2/tasks' }
+    let(:project_id) { 'test_harvest_project_id' }
+    let(:task_id) { 'test_harvest_task_id' }
+    let(:assignment_id) { '2021' }
+    let(:assignment_name) { 'Test assignment 3' }
+    let(:assignment_service) { 'Test service 3' }
+    let(:assignments_response_body) do
+      <<~HEREDOC
+        {
+          "assignments": [
+            {
+              "id": #{assignment_id},
+              "name": "#{assignment_name}",
+              "service": "#{assignment_service}",
+              "start_date": "2020-01-01",
+              "end_date": "2020-05-15",
+              "budget": 40,
+              "unit": "hours"
+            }
+          ]
+        }
+      HEREDOC
+    end
 
-    assignment_id = '1012'
-    assignment_name = 'Test assignment 2'
-    assignment_service = 'Test service 2'
-    assignments_response_body = <<~HEREDOC
-      {
-        "assignments": [
-          {
-            "id": #{assignment_id},
-            "name": "#{assignment_name}",
-            "service": "#{assignment_service}",
-            "start_date": "2020-01-01",
-            "end_date": "2020-05-15",
-            "budget": 40,
-            "unit": "hours"
-          }
-        ]
-      }
-    HEREDOC
+    before do
+      copy_config_files_to_tmp
+    end
 
-    stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
-    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
-    stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
-    selected_project_id = 'project_id1'
-    toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
-    stub_request(:get, toggl_tasks_url).to_return(body: '[]', status: 200)
+    it 'should return an error if not able to fetch harvest projects' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, harvest_projects_url).to_return(body: '{"projects": []}', status: 200)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
-      .and_return(toggl_provider)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(harvest_provider)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
-      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
-    workspace = { 'id' => workspace_id, name: 'Test workspace' }
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+      described_class.new(options).execute(output: output)
 
-    project_ids = [selected_project_id]
-    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
-      .and_return(project_ids)
+      error_message = "There is no projects. Please visit #{harvest_provider} and create them before continue."
+      expect(output.string).to include error_message
+    end
 
-    expect_any_instance_of(TTY::Prompt).not_to receive(:multi_select).with('Please select Tasks(by last 3 months):')
+    it 'should return an error if not able to fetch harvest tasks' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, harvest_projects_url).to_return(body: '{"projects": [{}]}', status: 200)
+      stub_request(:get, harvest_tasks_url).to_return(body: '{"tasks": []}', status: 200)
 
-    billable = 'yes'
-    expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Billable?', %w[yes no both])
-      .and_return(billable)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(harvest_provider)
 
-    rounding = 'on'
-    expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Rounding?', %w[on off])
-      .and_return(rounding)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
-    described_class.new(options).execute(output: output)
+      project = { 'id' => project_id, name: 'Test project' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Project:').and_return(project)
 
-    expect(output.string).to include "You don't have tasks. Continue..."
-  end
+      described_class.new(options).execute(output: output)
 
-  it 'should add new connection' do
-    copy_config_files_to_tmp
+      error_message = "There is no tasks. Please visit #{harvest_provider} and create them before continue."
+      expect(output.string).to include error_message
+    end
 
-    assignment_id = '1012'
-    assignment_name = 'Test assignment 2'
-    assignment_service = 'Test service 2'
-    assignments_response_body = <<~HEREDOC
-      {
-        "assignments": [
-          {
-            "id": #{assignment_id},
-            "name": "#{assignment_name}",
-            "service": "#{assignment_service}",
-            "start_date": "2020-01-01",
-            "end_date": "2020-05-15",
-            "budget": 40,
-            "unit": "hours"
-          }
-        ]
-      }
-    HEREDOC
+    it 'should add new connection' do
+      stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
+      stub_request(:get, harvest_projects_url).to_return(body: '{"projects": [{}]}', status: 200)
+      stub_request(:get, harvest_tasks_url).to_return(body: '{"tasks": [{}]}', status: 200)
 
-    stub_request(:get, assignments_url).to_return(body: assignments_response_body, status: 200)
-    stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
-    stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
-    selected_project_id = 'project_id1'
-    toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
-    stub_request(:get, toggl_tasks_url).to_return(body: '{}', status: 200)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
+        .and_return(harvest_provider)
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', [toggl_provider])
-      .and_return(toggl_provider)
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
+        .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
 
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select assignment:')
-      .and_return({ 'id' => assignment_id, 'name' => assignment_name, 'service' => assignment_service })
+      project = { 'id' => project_id, name: 'Test project' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Project:').and_return(project)
 
-    workspace = { 'id' => workspace_id, name: 'Test workspace' }
-    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Workspace:').and_return(workspace)
+      task = { 'id' => task_id, name: 'Test task' }
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Please select Task:').and_return(task)
 
-    project_ids = [selected_project_id]
-    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Projects:', min: 1)
-      .and_return(project_ids)
+      billable = 'yes'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Billable?', %w[yes no both])
+        .and_return(billable)
 
-    task_ids = %w[task_ids1 task_ids2 task_ids3 task_ids4]
-    expect_any_instance_of(TTY::Prompt).to receive(:multi_select).with('Please select Tasks(by last 3 months):')
-      .and_return(task_ids)
+      rounding = 'on'
+      expect_any_instance_of(TTY::Prompt).to receive(:select)
+        .with('Rounding?', %w[on off])
+        .and_return(rounding)
 
-    billable = 'yes'
-    expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Billable?', %w[yes no both])
-      .and_return(billable)
+      described_class.new(options).execute(output: output)
 
-    rounding = 'on'
-    expect_any_instance_of(TTY::Prompt).to receive(:select)
-      .with('Rounding?', %w[on off])
-      .and_return(rounding)
+      expect(output.string).to include 'Connection successfully added.'
 
-    described_class.new(options).execute(output: output)
-
-    expect(output.string).to include 'Connection successfully added.'
-
-    file_data = File.read(tmp_path(link_config_file))
-    expect(file_data).to include 'connections:'
-    expect(file_data).to include assignment_name
-    expect(file_data).to include assignment_service
-    expect(file_data).to include toggl_provider
-    expect(file_data).to include workspace_id
-    expect(file_data).to include project_ids.join(', ')
-    expect(file_data).to include task_ids.join(', ')
-    expect(file_data).to include billable
-    expect(file_data).to include rounding
+      file_data = File.read(tmp_path(link_config_file))
+      expect(file_data).to include 'connections:'
+      expect(file_data).to include assignment_name
+      expect(file_data).to include assignment_service
+      expect(file_data).to include harvest_provider
+      expect(file_data).to include project_id
+      expect(file_data).to include task_id
+      expect(file_data).to include billable
+      expect(file_data).to include rounding
+    end
   end
 end

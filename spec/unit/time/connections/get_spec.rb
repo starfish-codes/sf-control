@@ -6,7 +6,6 @@ RSpec.describe Sfctl::Commands::Time::Connections::Get, type: :unit do
   let(:options) do
     { 'no-color' => true }
   end
-  let(:toggl_provider) { 'toggl' }
 
   before do
     stub_const('Sfctl::Command::LINK_CONFIG_PATH', tmp_path(link_config_file))
@@ -28,13 +27,15 @@ RSpec.describe Sfctl::Commands::Time::Connections::Get, type: :unit do
   end
 
   it 'should get connections' do
-    assignment_name = 'Test assignment'
+    toggl_assignment_name = 'Test assignment'
+    harvest_assignment_name = 'Test assignment 2'
 
     link_config_path = fixtures_path(link_config_file)
     ::FileUtils.cp(link_config_path, tmp_path(link_config_file))
 
     described_class.new(options).execute(output: output)
 
-    expect(output.string).to include "Connection: #{assignment_name}"
+    expect(output.string).to include "Connection: #{toggl_assignment_name}"
+    expect(output.string).to include "Connection: #{harvest_assignment_name}"
   end
 end

@@ -18,11 +18,13 @@ module Sfctl
             prompt = ::TTY::Prompt.new
             provider = prompt.select('Setting up:', PROVIDERS_LIST)
 
-            !ask_for_replace(output, prompt) && return unless config.fetch("providers.#{TOGGL_PROVIDER}").nil?
+            !ask_for_replace(output, prompt) && return unless config.fetch("providers.#{provider}").nil?
 
             case provider
             when TOGGL_PROVIDER
               setup_toggl_provider!(output, prompt)
+            when HARVEST_PROVIDER
+              setup_harvest_provider!(output, prompt)
             end
           end
 
@@ -33,20 +35,44 @@ module Sfctl
             prompt.yes?('Do you want to replace it?')
           end
 
-          def save_toggl_config!(output, access_token)
-            config.set("providers.#{TOGGL_PROVIDER}.access_token", value: access_token)
+          def correct?(prompt)
+            prompt.yes?('Is that information correct?')
+          end
+
+          def save_config_and_print_message!(output)
             save_config!
             output.puts @pastel.green('Everything saved.')
+          end
+
+          def save_toggl_config!(output, access_token)
+            config.set("providers.#{TOGGL_PROVIDER}.access_token", value: access_token)
+            save_config_and_print_message!(output)
           end
 
           def setup_toggl_provider!(output, prompt)
             output.puts
             access_token = prompt.ask("Your access token at [#{@pastel.green(TOGGL_PROVIDER)}]:", required: true)
-            is_correct = prompt.yes?('Is that information correct?')
-            if is_correct
+            if correct?(prompt)
               save_toggl_config!(output, access_token)
             else
               setup_toggl_provider!(output, prompt)
+            end
+          end
+
+          def save_harvest_config!(output, account_id, access_token)
+            config.set("providers.#{HARVEST_PROVIDER}.account_id", value: account_id)
+            config.set("providers.#{HARVEST_PROVIDER}.access_token", value: access_token)
+            save_config_and_print_message!(output)
+          end
+
+          def setup_harvest_provider!(output, prompt)
+            output.puts
+            account_id = prompt.ask("Your Account ID at [#{@pastel.green(HARVEST_PROVIDER)}]:", required: true)
+            access_token = prompt.ask("Your Token at [#{@pastel.green(HARVEST_PROVIDER)}]:", required: true)
+            if correct?(prompt)
+              save_harvest_config!(output, account_id, access_token)
+            else
+              setup_harvest_provider!(output, prompt)
             end
           end
         end

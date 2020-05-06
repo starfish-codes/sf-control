@@ -28,7 +28,7 @@ module Sfctl
             else
               output.puts "Provider: #{@pastel.cyan(provider)}"
               info.each_key do |k|
-                output.puts "  #{k.upcase}: #{info[k]}"
+                output.puts "  #{k.upcase}: #{@pastel.magenta(info[k])}"
               end
             end
           end
