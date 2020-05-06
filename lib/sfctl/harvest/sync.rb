@@ -58,10 +58,10 @@ module Sfctl
         params = {
           project_id: connection['project_id'],
           task_id: connection['task_id'],
-          is_billed: connection['billable'] == 'yes',
           from: start_date.to_s,
           to: end_date.to_s
         }
+        params[:is_billed] = connection['billable'] == 'yes' unless connection['billable'] == 'both'
         params
       end
 

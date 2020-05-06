@@ -71,12 +71,6 @@ module Sfctl
           list.each do |assignment|
             assignment_id = assignment['id'].to_s
             connection = read_link_config['connections'].select { |c| c == assignment_id }
-
-            if connection.empty?
-              output.puts @pastel.red("Unable to find a connection for assignment \"#{assignment['name']}\"")
-              next
-            end
-
             sync(output, assignment, connection[assignment_id])
           end
         end

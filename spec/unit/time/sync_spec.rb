@@ -27,8 +27,11 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       https://api.harvestapp.com/api/v2/time_entries?from=2020-12-01&is_billed=true&project_id=1111111&task_id=2222222&to=2020-12-31
     HEREDOC
   end
+
   let(:toggl_assignment_name) { 'Test assignment' }
+  let(:harvest_assignment_name) { 'Test assignment 2' }
   let(:toggl_assignment_service) { 'Test service' }
+  let(:harvest_assignment_service) { 'Test service 2' }
   let(:toggl_assignments_body) do
     <<~HEREDOC
       {
@@ -84,7 +87,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         "time_entries":[
           {
             "id":636709355,
-            "spent_date":"2017-03-02",
+            "spent_date":"2020-12-10",
             "user":{
               "id":1782959,
               "name":"Kim Allen"
@@ -121,7 +124,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
             },
             "hours":2.11,
             "rounded_hours": 2.25,
-            "notes":"Adding CSS styling",
+            "notes":"Test time entry",
             "created_at":"2017-06-27T15:50:15Z",
             "updated_at":"2017-06-27T16:47:14Z",
             "is_locked":true,
@@ -330,6 +333,43 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     expect(output.string).to eq result
   end
 
+  it 'should sync harvest data successfully' do
+    copy_config_file
+    copy_link_config_file
+
+    stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+    stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+    stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+    expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+      .and_return(harvest_assignment_id)
+
+    printed_table = <<~HEREDOC
+      ┌────────────┬─────────────────┬─────────┐
+      │ Date       │ Comment         │ Time    │
+      ├────────────┼─────────────────┼─────────┤
+      │ 2020-12-10 │ Test time entry │   2.25h │
+      │ Total:     │                 │   2.25h │
+      └────────────┴─────────────────┴─────────┘
+    HEREDOC
+
+    expect_any_instance_of(TTY::Table).to receive(:render).and_return(printed_table)
+
+    result = <<~HEREDOC
+      Synchronizing: [#{harvest_assignment_name} / #{harvest_assignment_service}]
+      Next Report:   [2020-12]
+
+      #{printed_table}
+
+
+
+    HEREDOC
+
+    described_class.new(options).execute(output: output)
+
+    expect(output.string).to eq result
+  end
+
   it 'should raise an exception' do
     copy_config_file
     copy_link_config_file
@@ -345,7 +385,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     expect(output.string).to include 'Something went wrong.'
   end
 
-  context 'billable/non-billable/both time entries.' do
+  context 'toggl billable/non-billable/both time entries.' do
     it 'should print only billable time entries' do
       toggl_time_entries_body = <<~HEREDOC
         {
@@ -494,7 +534,181 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     end
   end
 
-  context 'rounding on/off' do
+  context 'harvest billable/non-billable/both time entries.' do
+    it 'should print only billable time entries' do
+      harvest_url = <<~HEREDOC
+        https://api.harvestapp.com/api/v2/time_entries?from=2020-12-01&is_billed=true&project_id=1111111&task_id=2222222&to=2020-12-31
+      HEREDOC
+
+      harvest_time_entries_body = <<~HEREDOC
+        {
+          "time_entries": [
+            {
+              "id": 1111,
+              "spent_date": "2020-12-10",
+              "hours": 2.25,
+              "rounded_hours": 2.25,
+              "notes": "Test billable time entry",
+              "is_billed": true
+            }
+          ]
+        }
+      HEREDOC
+
+      copy_config_file
+      copy_link_config_file
+
+      stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+      stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(harvest_assignment_id)
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test billable time entry', '2.25h'],
+            ['Total:', '', '2.25h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should print only non-billable time entries' do
+      harvest_url = <<~HEREDOC
+        https://api.harvestapp.com/api/v2/time_entries?from=2020-12-01&is_billed=false&project_id=1111111&task_id=2222222&to=2020-12-31
+      HEREDOC
+
+      harvest_time_entries_body = <<~HEREDOC
+        {
+          "time_entries": [
+            {
+              "id": 1111,
+              "spent_date": "2020-12-10",
+              "hours": 2.25,
+              "rounded_hours": 2.25,
+              "notes": "Test non-billable time entry",
+              "is_billed": false
+            }
+          ]
+        }
+      HEREDOC
+
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '2020':
+            name: Test assignment 2
+            service: Test service 2
+            provider: harvest
+            project_id: '1111111'
+            task_id: '2222222'
+            billable: 'no'
+            rounding: 'off'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+      stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(harvest_assignment_id)
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test non-billable time entry', '2.25h'],
+            ['Total:', '', '2.25h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should print both time entries' do
+      harvest_url = <<~HEREDOC
+        https://api.harvestapp.com/api/v2/time_entries?from=2020-12-01&project_id=1111111&task_id=2222222&to=2020-12-31
+      HEREDOC
+
+      harvest_time_entries_body = <<~HEREDOC
+        {
+          "time_entries": [
+            {
+              "id": 1111,
+              "spent_date": "2020-12-10",
+              "hours": 3.0,
+              "rounded_hours": 3.0,
+              "notes": "Test non-billable time entry",
+              "is_billed": false
+            },
+            {
+              "id": 2222,
+              "spent_date": "2020-12-10",
+              "hours": 2.25,
+              "rounded_hours": 2.25,
+              "notes": "Test billable time entry",
+              "is_billed": true
+            }
+          ]
+        }
+      HEREDOC
+
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '2020':
+            name: Test assignment 2
+            service: Test service 2
+            provider: harvest
+            project_id: '1111111'
+            task_id: '2222222'
+            billable: 'both'
+            rounding: 'off'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+      stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(harvest_assignment_id)
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test non-billable time entry', '3.0h'],
+            ['2020-12-10', 'Test billable time entry', '2.25h'],
+            ['Total:', '', '5.25h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+  end
+
+  context 'toggl rounding on/off' do
     let(:toggl_time_entries_body) do
       <<~HEREDOC
         {
@@ -589,6 +803,94 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
           [
             ['2020-12-10', 'Test time entry', '3h'],
             ['Total:', '', '3h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+  end
+
+  context 'harvest rounding on/off' do
+    let(:harvest_time_entries_body) do
+      <<~HEREDOC
+        {
+          "time_entries": [
+            {
+              "id": 1111,
+              "spent_date": "2020-12-10",
+              "hours": 2.11,
+              "rounded_hours": 2.25,
+              "notes": "Test time entry"
+            }
+          ]
+        }
+      HEREDOC
+    end
+
+    it 'should not round the value' do
+      copy_config_file
+      copy_link_config_file
+
+      stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+      stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(harvest_assignment_id)
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test time entry', '2.11h'],
+            ['Total:', '', '2.11h']
+          ]
+        )
+        .and_call_original
+
+      expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
+
+      described_class.new(options).execute(output: output)
+    end
+
+    it 'should round the value' do
+      harvest_url = <<~HEREDOC
+        https://api.harvestapp.com/api/v2/time_entries?from=2020-12-01&project_id=1111111&task_id=2222222&to=2020-12-31
+      HEREDOC
+
+      copy_config_file
+
+      ::FileUtils.touch tmp_path(link_config_file)
+      link_file_content = <<~HEREDOC
+        ---
+        connections:
+          '2020':
+            name: Test assignment 2
+            service: Test service 2
+            provider: harvest
+            project_id: '1111111'
+            task_id: '2222222'
+            billable: 'both'
+            rounding: 'on'
+      HEREDOC
+      File.write tmp_path(link_config_file), link_file_content
+
+      stub_request(:get, harvest_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, harvest_url).to_return(body: harvest_time_entries_body, status: 200)
+      stub_request(:put, harvest_next_report_url).to_return(body: '{}', status: 204)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(harvest_assignment_id)
+
+      expect(TTY::Table).to receive(:new)
+        .with(
+          table_headers,
+          [
+            ['2020-12-10', 'Test time entry', '2.25h'],
+            ['Total:', '', '2.25h']
           ]
         )
         .and_call_original
