@@ -1,4 +1,5 @@
 # sfctl [![Build status](https://badge.buildkite.com/22ecc67f358163f4714383ff0fde8e847d1e3ae488fc10312f.svg)](https://buildkite.com/starfish/sf-control)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falphatier-works%2Fsfctl.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falphatier-works%2Fsfctl?ref=badge_shield)
 
 ```
 sfctl is a command line interface for the Starfish API.
@@ -270,3 +271,7 @@ Uploading to starfish.team:                 [IN PROGRESS|DONE]
 
 [NEXT CONNECTION]
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falphatier-works%2Fsfctl.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Falphatier-works%2Fsfctl?ref=badge_large)
