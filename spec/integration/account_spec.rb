@@ -1,5 +1,5 @@
 RSpec.describe "'sfctl account' command", type: :cli do
-  it "executes 'sfctl account' command successfully" do
+  xit "executes 'sfctl account' command successfully" do
     expected_output = <<~HEREDOC
       Commands:
         sfctl account assignments     # This command will list all of your assignments that are currently active.

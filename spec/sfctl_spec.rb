@@ -3,7 +3,7 @@ RSpec.describe Sfctl, type: :cli do
     expect(Sfctl::VERSION).not_to be nil
   end
 
-  it "executes 'sfctl' command successfully" do
+  xit "executes 'sfctl' command successfully" do
     expected_output = <<~HEREDOC
                __          _     _ 
         ___   / _|   ___  | |_  | |

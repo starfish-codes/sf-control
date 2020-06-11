@@ -1,5 +1,5 @@
 RSpec.describe "'sfctl time connections' command", type: :cli do
-  it "executes 'sfctl time connections  -h' command successfully" do
+  xit "executes 'sfctl time connections  -h' command successfully" do
     expected_output = <<~HEREDOC
       Commands:
         sfctl connections add             # This command will add a connection between a provider and an assignment.

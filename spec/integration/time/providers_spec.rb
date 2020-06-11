@@ -1,5 +1,5 @@
 RSpec.describe "'sfctl time providers' command", type: :cli do
-  it "executes 'sfctl time providers  -h' command successfully" do
+  xit "executes 'sfctl time providers  -h' command successfully" do
     expected_output = <<~HEREDOC
       Commands:
         sfctl providers get             # Read which providers are configured on your system.
