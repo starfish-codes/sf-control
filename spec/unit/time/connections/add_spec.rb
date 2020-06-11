@@ -10,7 +10,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   let(:options) do
     {
       'no-color' => true,
-      'starfish-host' => 'https://starfish.team'
+      'starfish-host' => 'https://app.starfish.team'
     }
   end
   let(:toggl_provider) { 'toggl' }

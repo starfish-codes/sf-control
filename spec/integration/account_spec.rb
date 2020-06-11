@@ -2,9 +2,9 @@ RSpec.describe "'sfctl account' command", type: :cli do
   it "executes 'sfctl account' command successfully" do
     expected_output = <<~HEREDOC
       Commands:
-        sfctl account assignments     # This command will list all of your assignme...
-        sfctl account help [COMMAND]  # Describe subcommands or one specific subcom...
-        sfctl account info            # This will read your profile data and give y...
+        sfctl account assignments     # This command will list all of your assignments that are currently active.
+        sfctl account help [COMMAND]  # Describe subcommands or one specific subcommand
+        sfctl account info            # This will read your profile data and give you an overview of your account.
 
     HEREDOC
 

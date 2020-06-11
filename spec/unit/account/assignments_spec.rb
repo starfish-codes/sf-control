@@ -6,7 +6,7 @@ RSpec.describe Sfctl::Commands::Account::Assignments, type: :unit do
   let(:options) do
     {
       'no-color' => true,
-      'starfish-host' => 'https://starfish.team',
+      'starfish-host' => 'https://app.starfish.team',
       'all' => false
     }
   end

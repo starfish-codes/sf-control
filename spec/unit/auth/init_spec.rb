@@ -6,7 +6,7 @@ RSpec.describe Sfctl::Commands::Auth::Init, type: :unit do
   let(:options) do
     {
       'no-color' => true,
-      'starfish-host' => 'https://starfish.team'
+      'starfish-host' => 'https://app.starfish.team'
     }
   end
   let(:check_auth_url) { "#{options['starfish-host']}/api/v1/profile" }

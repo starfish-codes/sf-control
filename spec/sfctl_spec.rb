@@ -14,14 +14,14 @@ RSpec.describe Sfctl, type: :cli do
       Commands:
         sfctl account [SUBCOMMAND]  # Account information for Starfish.team
         sfctl auth [SUBCOMMAND]     # Authentication with Starfish.team
-        sfctl help [COMMAND]        # Describe available commands or one specific c...
+        sfctl help [COMMAND]        # Describe available commands or one specific command
         sfctl time [SUBCOMMAND]     # Time reports
         sfctl version               # sfctl version
 
       Options:
         [--no-color]            # Disable colorization in output
         [--starfish-host=HOST]  # The starfish API endpoint
-                                # Default: https://starfish.team
+                                # Default: https://app.starfish.team
 
     HEREDOC
 

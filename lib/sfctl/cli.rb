@@ -21,7 +21,7 @@ module Sfctl
     end
 
     class_option :"no-color", type: :boolean, default: false, desc: 'Disable colorization in output'
-    class_option :"starfish-host", type: :string, default: 'https://starfish.team',
+    class_option :"starfish-host", type: :string, default: 'https://app.starfish.team',
                                    desc: 'The starfish API endpoint',
                                    banner: 'HOST'
 

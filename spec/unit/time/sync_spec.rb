@@ -6,7 +6,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   let(:output) { StringIO.new }
   let(:options) do
     {
-      'starfish-host' => 'https://starfish.team',
+      'starfish-host' => 'https://app.starfish.team',
       'no-color' => true
     }
   end
