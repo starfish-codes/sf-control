@@ -311,8 +311,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       ┌────────────┬─────────────────┬──────┐
       │ Date       │ Comment         │ Time │
       ├────────────┼─────────────────┼──────┤
-      │ 2020-12-10 │ Test time entry │   3h │
-      │ Total:     │                 │   3h │
+      │ 2020-12-10 │ Test time entry │   10800sec │
+      │ Total:     │                 │   10800sec │
       └────────────┴─────────────────┴──────┘
     HEREDOC
 
@@ -416,8 +416,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test billable time entry', '2.50h'],
-            ['Total:', '', '2.50h']
+            ['2020-12-10', 'Test billable time entry', '9000sec'],
+            ['Total:', '', '9000sec']
           ]
         )
         .and_call_original
@@ -476,8 +476,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test non-billable time entry', '3h'],
-            ['Total:', '', '3h']
+            ['2020-12-10', 'Test non-billable time entry', '10800sec'],
+            ['Total:', '', '10800sec']
           ]
         )
         .and_call_original
@@ -521,9 +521,9 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test non-billable time entry', '3h'],
-            ['2020-12-10', 'Test billable time entry', '2.50h'],
-            ['Total:', '', '5.50h']
+            ['2020-12-10', 'Test non-billable time entry', '10800sec'],
+            ['2020-12-10', 'Test billable time entry', '9000sec'],
+            ['Total:', '', '19800sec']
           ]
         )
         .and_call_original
@@ -741,8 +741,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test time entry', '3.46h'],
-            ['Total:', '', '3.46h']
+            ['2020-12-10', 'Test time entry', '12500sec'],
+            ['Total:', '', '12500sec']
           ]
         )
         .and_call_original
@@ -801,8 +801,8 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
         .with(
           table_headers,
           [
-            ['2020-12-10', 'Test time entry', '3h'],
-            ['Total:', '', '3h']
+            ['2020-12-10', 'Test time entry', '10800sec'],
+            ['Total:', '', '10800sec']
           ]
         )
         .and_call_original

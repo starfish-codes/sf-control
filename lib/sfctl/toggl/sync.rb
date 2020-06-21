@@ -28,10 +28,10 @@ module Sfctl
           [
             Date.parse(te['start']).to_s,
             te['description'],
-            "#{humanize_duration(te['dur'])}h"
+            "#{humanize_duration(te['dur'])}sec"
           ]
         end
-        rows.push(['Total:', '', "#{humanize_duration(time_entries['total_grand'])}h"])
+        rows.push(['Total:', '', "#{humanize_duration(time_entries['total_grand'])}sec"])
         rows
       end
 
@@ -61,27 +61,15 @@ module Sfctl
       def self.humanize_duration(milliseconds)
         return '0' if milliseconds.nil?
 
-        seconds = milliseconds / 1000
-        minutes = seconds / 60
-        int = (minutes / 60).ceil
-        dec = minutes % 60
-        amount = (dec * 100) / 60
-        amount = if dec.zero?
-                   ''
-                 elsif amount.to_s.length == 1
-                   ".0#{amount}"
-                 else
-                   ".#{amount}"
-                 end
-        "#{int}#{amount}"
+        milliseconds.div(1000)
       end
 
       def self.assignment_items(time_entries)
         time_entries.map do |te|
           {
-            time: humanize_duration(te['dur']).to_f,
             date: Date.parse(te['start']).to_s,
-            comment: te['description']
+            comment: te['description'],
+            time_seconds: humanize_duration(te['dur'])
           }
         end
       end
