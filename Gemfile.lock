@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sfctl (0.1.0)
+    sfctl (1.0.1)
       faraday (~> 1.0)
       pastel (~> 0.7)
       rake (~> 12.0)

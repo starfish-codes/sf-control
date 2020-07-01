@@ -19,7 +19,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
   let(:toggl_token) { 'test_toggl_token' }
   let(:toggl_url) do
     <<~HEREDOC
-      https://www.toggl.com/reports/api/v2/details?billable=yes&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+      https://www.toggl.com/reports/api/v2/details?billable=yes&page=1&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
     HEREDOC
   end
   let(:harvest_url) do
@@ -62,6 +62,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     <<~HEREDOC
       {
         "total_grand": 19800000,
+        "total_count": 2,
         "data": [
           {
             "id": 4444,
@@ -390,6 +391,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       toggl_time_entries_body = <<~HEREDOC
         {
           "total_grand": 9000000,
+          "total_count": 1,
           "data": [
             {
               "id": 5555,
@@ -429,12 +431,13 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     it 'should print only non-billable time entries' do
       toggl_url = <<~HEREDOC
-        https://www.toggl.com/reports/api/v2/details?billable=no&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+        https://www.toggl.com/reports/api/v2/details?billable=no&page=1&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
       HEREDOC
 
       toggl_time_entries_body = <<~HEREDOC
         {
           "total_grand": 10800000,
+          "total_count": 1,
           "data": [
             {
               "id": 4444,
@@ -489,7 +492,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     it 'should print both time entries' do
       toggl_url = <<~HEREDOC
-        https://www.toggl.com/reports/api/v2/details?billable=both&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+        https://www.toggl.com/reports/api/v2/details?billable=both&page=1&project_ids=2222,%203333&rounding=off&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
       HEREDOC
 
       copy_config_file
@@ -713,6 +716,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       <<~HEREDOC
         {
           "total_grand": 12500000,
+          "total_count": 1,
           "data": [
             {
               "id": 4444,
@@ -754,12 +758,13 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     it 'should round the value' do
       toggl_url = <<~HEREDOC
-        https://www.toggl.com/reports/api/v2/details?billable=both&project_ids=2222,%203333&rounding=on&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
+        https://www.toggl.com/reports/api/v2/details?billable=both&page=1&project_ids=2222,%203333&rounding=on&since=2020-12-01&task_ids=4444,%205555,%206666,%207777&until=2020-12-31&user_agent=api_test&workspace_id=11111
       HEREDOC
 
       toggl_time_entries_body = <<~HEREDOC
         {
           "total_grand": 10800000,
+          "total_count": 1,
           "data": [
             {
               "id": 4444,
