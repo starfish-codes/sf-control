@@ -20,31 +20,45 @@ module Sfctl
         output.puts
         output.puts
 
-        time_entries['data']
+        time_entries
       end
 
       def self.time_entries_table_rows(time_entries)
-        rows = time_entries['data'].sort_by { |te| te['start'] }.map do |te|
+        rows = time_entries.sort_by { |te| te['start'] }.map do |te|
           [
             Date.parse(te['start']).to_s,
             te['description'],
             "#{humanize_duration(te['dur'])}h"
           ]
         end
-        rows.push(['Total:', '', "#{humanize_duration(time_entries['total_grand'])}h"])
+        total_grand = time_entries.sum { |te| te['dur'] }
+        rows.push(['Total:', '', "#{humanize_duration(total_grand)}h"])
         rows
       end
 
       def self.get_time_entries(connection, toggl_config, report_interval)
-        _success, data = Toggl::Client.time_entries(
-          toggl_config['access_token'],
-          time_entries_params(connection, report_interval)
-        )
+        entries_list = []
 
-        data
+        page = 1
+        loop do
+          _success, body = Toggl::Client.time_entries(
+            toggl_config['access_token'],
+            time_entries_params(connection, report_interval, page)
+          )
+
+          entries_list << body['data']
+          entries_list.flatten!
+          entries_list.compact!
+
+          break if entries_list.length >= body['total_count']
+
+          page += 1
+        end
+
+        entries_list
       end
 
-      def self.time_entries_params(connection, report_interval)
+      def self.time_entries_params(connection, report_interval, page = 1)
         start_date, end_date = report_interval
         params = {
           workspace_id: connection['workspace_id'],
@@ -52,7 +66,8 @@ module Sfctl
           billable: connection['billable'],
           rounding: connection['rounding'],
           since: start_date.to_s,
-          until: end_date.to_s
+          until: end_date.to_s,
+          page: page
         }
         params[:task_ids] = connection['task_ids'] if connection['task_ids'].length.positive?
         params

@@ -12,3 +12,4 @@
 .DS_Store
 sfctl-*.gem
 /.sflink
+.byebug_history
