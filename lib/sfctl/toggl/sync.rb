@@ -93,8 +93,9 @@ module Sfctl
 
       def self.assignment_items(time_entries)
         time_entries.map do |te|
+          milliseconds = te['dur'] || 0
           {
-            time: humanize_duration(te['dur']).to_f,
+            time_seconds: milliseconds.div(1000),
             date: Date.parse(te['start']).to_s,
             comment: te['description']
           }
