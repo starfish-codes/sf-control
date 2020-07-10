@@ -331,6 +331,21 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     described_class.new(options).execute(output: output)
 
+    starfish_request = a_request(:put, toggl_next_report_url).with do |req|
+      JSON.parse(req.body).fetch('items') == [
+        {
+          'time_seconds' => 10_800,
+          'date' => '2020-12-10',
+          'comment' => 'Test non-billable time entry'
+        },
+        {
+          'time_seconds' => 9_000,
+          'date' => '2020-12-10',
+          'comment' => 'Test billable time entry'
+        }
+      ]
+    end
+    expect(starfish_request).to have_been_made
     expect(output.string).to eq result
   end
 
@@ -367,7 +382,14 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     HEREDOC
 
     described_class.new(options).execute(output: output)
-
+    starfish_request = a_request(:put, harvest_next_report_url).with do |req|
+      JSON.parse(req.body).fetch('items') == [{
+        'time_seconds' => 7_596,
+        'date' => '2020-12-10',
+        'comment' => 'Test time entry'
+      }]
+    end
+    expect(starfish_request).to have_been_made
     expect(output.string).to eq result
   end
 

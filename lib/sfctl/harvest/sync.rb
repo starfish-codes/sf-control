@@ -68,8 +68,10 @@ module Sfctl
       def self.assignment_items(time_entries, connection)
         hours_field = hours_field(connection['rounding'])
         time_entries.map do |te|
+          hours = te[hours_field]
+          time_seconds = hours * 60 * 60
           {
-            time: te[hours_field],
+            time_seconds: time_seconds.round,
             date: te['spent_date'].to_s,
             comment: te['notes']
           }
