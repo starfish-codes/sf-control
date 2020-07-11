@@ -21,7 +21,7 @@ module Sfctl
         def execute(output: $stdout)
           return if !config_present?(output) || !link_config_present?(output)
 
-          if read_link_config['connections'].length.zero?
+          if connections.length.zero?
             output.puts @pastel.red('Please add a connection before continue.')
             return
           end
@@ -34,8 +34,12 @@ module Sfctl
 
         private
 
+        def connections
+          @connections ||= read_link_config.fetch('connections', [])
+        end
+
         def assignments_from_connections
-          read_link_config['connections'].map do |con|
+          connections.map do |con|
             id = con[0]
             asmnt = con[1]
             {
@@ -70,7 +74,7 @@ module Sfctl
         def sync_assignments(output, list)
           list.each do |assignment|
             assignment_id = assignment['id'].to_s
-            connection = read_link_config['connections'].select { |c| c == assignment_id }
+            connection = connections.select { |c| c == assignment_id }
             sync(output, assignment, connection[assignment_id])
           end
         end

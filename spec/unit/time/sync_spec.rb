@@ -197,7 +197,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     ::FileUtils.touch tmp_path(link_config_file)
     expect(File.file?(tmp_path(link_config_file))).to be_truthy
-    File.write tmp_path(link_config_file), "---\nconnections: {}"
+    File.write tmp_path(link_config_file), '--- {}'
 
     described_class.new(options).execute(output: output)
     expect(output.string).to include 'Please add a connection before continue.'
