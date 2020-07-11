@@ -10,9 +10,14 @@ module Sfctl
         spinner = TTY::Spinner.new("Loaded data from #{Sfctl::Command::TOGGL_PROVIDER}: [:spinner]", format: :dots)
         spinner.auto_spin
 
-        time_entries = get_time_entries(connection, toggl_config, report_interval)
+        time_entries, error = get_time_entries(connection, toggl_config, report_interval)
 
-        spinner.success(pastel.green('Done'))
+        if error
+          spinner.error
+          output.puts pastel.red(error)
+        else
+          spinner.success(pastel.green('Done'))
+        end
 
         table = TTY::Table.new %w[Date Comment Time], time_entries_table_rows(time_entries)
         output.puts
@@ -38,13 +43,19 @@ module Sfctl
 
       def self.get_time_entries(connection, toggl_config, report_interval)
         entries_list = []
+        error = nil
 
         page = 1
         loop do
-          _success, body = Toggl::Client.time_entries(
+          success, body = Toggl::Client.time_entries(
             toggl_config['access_token'],
             time_entries_params(connection, report_interval, page)
           )
+
+          unless success
+            error = body.fetch('message', body)
+            break
+          end
 
           entries_list << body['data']
           entries_list.flatten!
@@ -55,7 +66,7 @@ module Sfctl
           page += 1
         end
 
-        entries_list
+        [entries_list, error]
       end
 
       def self.time_entries_params(connection, report_interval, page = 1)

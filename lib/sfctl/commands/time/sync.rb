@@ -79,7 +79,7 @@ module Sfctl
           end
         end
 
-        def sync(output, assignment, connection) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
+        def sync(output, assignment, connection) # rubocop:disable Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity, Metrics/AbcSize
           output.puts "Synchronizing: #{@pastel.cyan("[#{assignment['name']} / #{assignment['service']}]")}"
 
           success, next_report = Starfish::Client.next_report(@options['starfish-host'], access_token, assignment['id'])
@@ -92,7 +92,7 @@ module Sfctl
 
           print_report_contains_data(output, next_report) && return if touchy?(next_report)
 
-          uploading_to_starfish(output, assignment, time_entries, connection)
+          uploading_to_starfish(output, assignment, time_entries, connection) if time_entries.any?
         end
 
         def report_interval(record)
