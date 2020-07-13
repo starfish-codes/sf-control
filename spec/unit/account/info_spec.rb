@@ -1,5 +1,4 @@
 require 'sfctl/commands/account/info'
-require 'tty-file'
 
 RSpec.describe Sfctl::Commands::Account::Info, type: :unit do
   let(:config_file) { '.sfctl' }
