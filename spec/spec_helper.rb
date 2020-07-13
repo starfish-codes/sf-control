@@ -8,7 +8,6 @@ if ENV['COVERAGE'] || ENV['BUILDKITE']
   end
 end
 
-require 'bundler/setup'
 require 'sfctl'
 require 'open3'
 require 'webmock/rspec'

@@ -90,7 +90,7 @@ module Sfctl
             @prompt.select('Rounding?', %w[on off])
           end
 
-          def setup_toggl_connection!(output, assignment_obj) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+          def setup_toggl_connection!(output, assignment_obj) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
             spinner = ::TTY::Spinner.new('[:spinner] Loading ...')
 
             assignment_id = assignment_obj['id']
@@ -162,7 +162,7 @@ module Sfctl
             clear_conf_and_print_success!(output)
           end
 
-          def setup_harvest_connection!(output, assignment_obj) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+          def setup_harvest_connection!(output, assignment_obj) # rubocop:disable Metrics/AbcSize, Metrics/MethodLength, Metrics/CyclomaticComplexity
             spinner = ::TTY::Spinner.new('[:spinner] Loading ...')
 
             assignment_id = assignment_obj['id']
