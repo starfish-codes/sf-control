@@ -334,11 +334,13 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     starfish_request = a_request(:put, toggl_next_report_url).with do |req|
       JSON.parse(req.body).fetch('items') == [
         {
+          'external_id' => '4444',
           'time_seconds' => 10_800,
           'date' => '2020-12-10',
           'comment' => 'Test non-billable time entry'
         },
         {
+          'external_id' => '5555',
           'time_seconds' => 9_000,
           'date' => '2020-12-10',
           'comment' => 'Test billable time entry'
@@ -384,6 +386,7 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     described_class.new(options).execute(output: output)
     starfish_request = a_request(:put, harvest_next_report_url).with do |req|
       JSON.parse(req.body).fetch('items') == [{
+        'external_id' => '636709355',
         'time_seconds' => 7_596,
         'date' => '2020-12-10',
         'comment' => 'Test time entry'

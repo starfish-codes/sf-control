@@ -73,7 +73,8 @@ module Sfctl
           {
             time_seconds: time_seconds.round,
             date: te['spent_date'].to_s,
-            comment: te['notes']
+            comment: te['notes'],
+            external_id: te['id'].to_s
           }
         end
       end

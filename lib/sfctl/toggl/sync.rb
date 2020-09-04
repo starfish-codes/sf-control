@@ -108,7 +108,8 @@ module Sfctl
           {
             time_seconds: milliseconds.div(1000),
             date: Date.parse(te['start']).to_s,
-            comment: te['description']
+            comment: te['description'],
+            external_id: te['id'].to_s
           }
         end
       end
