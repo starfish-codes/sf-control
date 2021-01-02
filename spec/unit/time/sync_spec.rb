@@ -331,6 +331,23 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
 
     described_class.new(options).execute(output: output)
 
+    starfish_request = a_request(:put, toggl_next_report_url).with do |req|
+      JSON.parse(req.body).fetch('items') == [
+        {
+          'external_id' => '4444',
+          'time_seconds' => 10_800,
+          'date' => '2020-12-10',
+          'comment' => 'Test non-billable time entry'
+        },
+        {
+          'external_id' => '5555',
+          'time_seconds' => 9_000,
+          'date' => '2020-12-10',
+          'comment' => 'Test billable time entry'
+        }
+      ]
+    end
+    expect(starfish_request).to have_been_made
     expect(output.string).to eq result
   end
 
@@ -367,7 +384,15 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
     HEREDOC
 
     described_class.new(options).execute(output: output)
-
+    starfish_request = a_request(:put, harvest_next_report_url).with do |req|
+      JSON.parse(req.body).fetch('items') == [{
+        'external_id' => '636709355',
+        'time_seconds' => 7_596,
+        'date' => '2020-12-10',
+        'comment' => 'Test time entry'
+      }]
+    end
+    expect(starfish_request).to have_been_made
     expect(output.string).to eq result
   end
 
@@ -903,6 +928,32 @@ RSpec.describe Sfctl::Commands::Time::Sync, type: :unit do
       expect_any_instance_of(TTY::Table).to receive(:render).and_return('printed table')
 
       described_class.new(options).execute(output: output)
+    end
+  end
+
+  context 'toggl lack of paid subscription' do
+    let(:toggl_time_entries_body) do
+      <<~HEREDOC
+        {
+          "message": "This feature requires paid subscription",
+          "tip": "Please visit https://www.toggl.com/app/subscription to see subscription details",
+          "code": 402
+        }
+      HEREDOC
+    end
+
+    it 'shows an error' do
+      copy_config_file
+      copy_link_config_file
+
+      stub_request(:get, toggl_next_report_url).to_return(body: next_report_body, status: 200)
+      stub_request(:get, toggl_url).to_return(body: toggl_time_entries_body, status: 402)
+
+      expect_any_instance_of(TTY::Prompt).to receive(:select).with('Which assignment do you want to sync?')
+        .and_return(toggl_assignment_id)
+
+      described_class.new(options).execute(output: output)
+      expect(output.string).to include 'This feature requires paid subscription'
     end
   end
 end

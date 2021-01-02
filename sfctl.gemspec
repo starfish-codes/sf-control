@@ -5,7 +5,7 @@ Gem::Specification.new do |spec|
   spec.license = 'MIT'
   spec.version = Sfctl::VERSION
   spec.authors = ['Serhii Rudik', 'Markus Kuhnt']
-  spec.email = ['serhii@starfish.team']
+  spec.email = ['hello@starfish.codes']
   spec.homepage = 'https://github.com/alphatier-works/sfctl'
   spec.summary = 'sfctl is a command line interface for the Starfish API.'
   # spec.homepage      = ''
@@ -38,7 +38,7 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency 'tty-progressbar', '~> 0.17.0'
   spec.add_runtime_dependency 'tty-prompt', '~> 0.21.0'
   spec.add_runtime_dependency 'tty-reader', '~> 0.7.0'
-  spec.add_runtime_dependency 'tty-screen', '~> 0.7.1'
+  spec.add_runtime_dependency 'tty-screen', '~> 0.8.1'
   spec.add_runtime_dependency 'tty-spinner', '~> 0.9.3'
   spec.add_runtime_dependency 'tty-table', '~> 0.11.0'
   spec.add_runtime_dependency 'tty-tree', '~> 0.4.0'
