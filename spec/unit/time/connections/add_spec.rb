@@ -84,9 +84,9 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
   end
 
   context 'toggl' do
-    let(:toggl_workspaces_url) { 'https://www.toggl.com/api/v8/workspaces' }
+    let(:toggl_workspaces_url) { 'https://api.track.toggl.com/api/v8/workspaces' }
     let(:workspace_id) { 'test_workspace_id' }
-    let(:toggl_projects_url) { "https://www.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
+    let(:toggl_projects_url) { "https://api.track.toggl.com/api/v8/workspaces/#{workspace_id}/projects" }
     let(:assignment_id) { '1012' }
     let(:assignment_name) { 'Test assignment 3' }
     let(:assignment_service) { 'Test service 3' }
@@ -137,7 +137,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
       stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
       stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
       selected_project_id = 'project_id1'
-      toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+      toggl_tasks_url = "https://api.track.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
       stub_request(:get, toggl_tasks_url).to_return(body: '[]', status: 200)
 
       expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
@@ -175,7 +175,7 @@ RSpec.describe Sfctl::Commands::Time::Connections::Add, type: :unit do
       stub_request(:get, toggl_workspaces_url).to_return(body: '{}', status: 200)
       stub_request(:get, toggl_projects_url).to_return(body: '[{}]', status: 200)
       selected_project_id = 'project_id1'
-      toggl_tasks_url = "https://www.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
+      toggl_tasks_url = "https://api.track.toggl.com/api/v8/workspaces/#{selected_project_id}/tasks"
       stub_request(:get, toggl_tasks_url).to_return(body: '{}', status: 200)
 
       expect_any_instance_of(TTY::Prompt).to receive(:select).with('Select provider:', providers_list)
