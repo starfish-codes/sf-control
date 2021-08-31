@@ -13,7 +13,7 @@ module Sfctl
         api_path = api == 'reports' ? REPORTS_API_PATH : DEFAULT_API_PATH
 
         headers = { 'Content-Type' => 'application/json' }
-        Faraday.new(url: "https://#{token}:api_token@www.toggl.com/#{api_path}", headers: headers) do |builder|
+        Faraday.new(url: "https://#{token}:api_token@api.track.toggl.com/#{api_path}", headers: headers) do |builder|
           builder.request :retry
           builder.adapter :net_http
         end
